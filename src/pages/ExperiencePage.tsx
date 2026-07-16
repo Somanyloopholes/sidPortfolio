@@ -7,7 +7,7 @@ type TimelineItem = {
   highlights: string[];
 };
 
-const workItems: TimelineItem[] = [
+export const workItems: TimelineItem[] = [
   {
     id: "work-1",
     title: "Systems Engineer",
@@ -32,7 +32,7 @@ const workItems: TimelineItem[] = [
   },
 ];
 
-const educationItems: TimelineItem[] = [
+export const educationItems: TimelineItem[] = [
   {
     id: "edu-1",
     title: "B.E. in Computer Engineering",
