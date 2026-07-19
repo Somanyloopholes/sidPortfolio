@@ -64,7 +64,7 @@ export default function Dock() {
   const location = useLocation();
 
   return (
-    <div className="fixed bottom-4 md:bottom-8 left-1/2 z-50 -translate-x-1/2 w-[95%] sm:w-full flex justify-center">
+    <div className="fixed bottom-2 md:bottom-8 left-1/2 z-50 -translate-x-1/2 w-auto flex justify-center scale-90 sm:scale-100 origin-bottom">
       <MotionDock 
         panelHeight={48} 
         magnification={80}

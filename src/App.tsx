@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useLocation, useOutlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import './App.css';
@@ -34,17 +34,17 @@ function App() {
     animate: {
       x: '0%',
       opacity: 1,
-      transition: { type: 'spring' as const, stiffness: 300, damping: 30 }
+      transition: { type: 'tween' as const, ease: 'easeInOut', duration: 0.3 }
     },
     exit: (dir: number) => ({
       x: dir === 1 ? '-100%' : '100%',
       opacity: 0,
-      transition: { type: 'spring' as const, stiffness: 300, damping: 30 }
+      transition: { type: 'tween' as const, ease: 'easeInOut', duration: 0.3 }
     })
   };
 
   return (
-    <div className='flex min-h-screen w-full flex-col bg-[#141413] text-[#faf9f5] font-inter overflow-hidden'>
+    <div className='flex min-h-screen w-full flex-col bg-[#141413] text-[#faf9f5] font-inter overflow-x-hidden'>
       <Navbar />
       <main className='mt-14 flex-1 flex w-full relative'>
         <AnimatePresence mode="popLayout" custom={direction} initial={false}>
