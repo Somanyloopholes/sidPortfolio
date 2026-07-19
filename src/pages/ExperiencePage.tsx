@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Timeline } from '@/Components/ui/timeline';
 
 export default function ExperiencePage() {
@@ -80,8 +80,10 @@ export default function ExperiencePage() {
   ];
 
   return (
-    <section className="min-h-[calc(100vh-3.5rem)] pb-12 w-full">
-      <Timeline data={data} />
+    <section className="flex min-h-[calc(100vh-3.5rem)] w-full flex-col items-center justify-start pt-12 pb-24 px-4">
+      <div className="w-full max-w-5xl flex flex-col gap-8">
+        <Timeline data={data} />
+      </div>
     </section>
   );
 }

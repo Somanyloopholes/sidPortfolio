@@ -1,9 +1,9 @@
-import React from "react";
-import { Timeline } from "@/components/ui/timeline";
+import { Timeline } from "@/Components/ui/timeline";
 
 export default function TimelineDemo() {
   const data = [
     {
+      type: "work" as const,
       title: "2024",
       content: (
         <div>
@@ -44,6 +44,7 @@ export default function TimelineDemo() {
       ),
     },
     {
+      type: "work" as const,
       title: "Early 2023",
       content: (
         <div>
@@ -89,6 +90,7 @@ export default function TimelineDemo() {
       ),
     },
     {
+      type: "work" as const,
       title: "Changelog",
       content: (
         <div>
