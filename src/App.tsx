@@ -34,12 +34,12 @@ function App() {
     animate: {
       x: '0%',
       opacity: 1,
-      transition: { type: 'tween' as const, ease: 'easeInOut', duration: 0.3 }
+      transition: { type: 'tween' as const, ease: 'easeInOut' as const, duration: 0.3 }
     },
     exit: (dir: number) => ({
       x: dir === 1 ? '-100%' : '100%',
       opacity: 0,
-      transition: { type: 'tween' as const, ease: 'easeInOut', duration: 0.3 }
+      transition: { type: 'tween' as const, ease: 'easeInOut' as const, duration: 0.3 }
     })
   };
 
