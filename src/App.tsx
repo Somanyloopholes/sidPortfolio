@@ -5,7 +5,7 @@ import './App.css';
 import Navbar from "./Components/Navbar.tsx";
 import Dock from "./Components/Dock.tsx";
 
-const routeOrder = ['/', '/experience', '/projects', '/contact'];
+const routeOrder = ['/', '/projects', '/experience', '/contact'];
 
 function App() {
   const location = useLocation();

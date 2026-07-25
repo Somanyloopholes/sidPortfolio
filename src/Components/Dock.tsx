@@ -52,8 +52,8 @@ export type RouteConfig = {
 
 const dockRoutes: RouteConfig[] = [
   { to: "/", externalUrl: "", label: "Home", icon: Home, internal: true },
-  { to: "/experience", externalUrl: "", label: "Experience", icon: Briefcase, internal: true },
   { to: "/projects", externalUrl: "", label: "Projects", icon: FolderCode, internal: true },
+  { to: "/experience", externalUrl: "", label: "Experience", icon: Briefcase, internal: true },
   { to: "/contact", externalUrl: "", label: "Contact", icon: Mail, internal: true },
   { to: "", externalUrl: "https://www.linkedin.com/in/siddharth-geddam/", label: "LinkedIn", icon: CustomLinkedinIcon, internal: false },
   { to: "", externalUrl: "https://github.com/Somanyloopholes", label: "GitHub", icon: CustomGithubIcon, internal: false },
