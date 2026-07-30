@@ -62,6 +62,10 @@
   --color-secondary-text: #F4F4F5;
   --color-tertiary-text: #A1A1AA;
   --color-hero-accent: #A6D800;
+
+  /* Custom Theme Colors */
+  --color-timeline-work: var(--color-rose-400);
+  --color-timeline-edu: var(--color-cyan-400);
 }
 
 html,
@@ -164,42 +168,54 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
   }
 }
 
 @layer components {
+
   /* Figma Typography */
   .text-display-hero {
     @apply font-mono text-[33px] leading-[40px] font-semibold md:text-[64px] md:leading-[48px];
   }
+
   .text-section-heading {
     @apply font-mono text-[28px] leading-[36px] font-semibold md:text-[32px] md:leading-[40px];
   }
+
   .text-sub-heading {
     @apply font-mono text-[23px] leading-[28px] font-medium md:text-[25px] md:leading-[32px];
   }
+
   .text-statement-mono {
-    @apply font-jetbrains text-[24px] leading-[28px] font-normal;
+    @apply font-jetbrains text-[20px] leading-[28px] font-normal;
   }
+
   .text-title-small {
     @apply font-mono text-[19px] leading-[24px] font-medium md:text-[20px] md:leading-[28px];
   }
+
   .text-body-prose {
     @apply font-inter text-[16px] leading-[24px] font-normal;
   }
+
   .text-body-emphasis {
     @apply font-inter text-[16px] leading-[24px] font-semibold;
   }
+
   .text-micro-tag {
     @apply font-mono text-[12px] leading-[16px] font-medium;
   }
 }
-  ::view-transition-old(root), ::view-transition-new(root) {
-    animation: none;
-    mix-blend-mode: normal;
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }

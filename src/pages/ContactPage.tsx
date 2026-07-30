@@ -43,7 +43,7 @@ export default function ContactPage(): React.JSX.Element {
             rotateY,
             transformStyle: "preserve-3d",
           }}
-          className="relative mx-auto flex h-full w-full flex-col justify-between overflow-hidden rounded-[4px] bg-[#121214] p-[clamp(16px,4vw,32px)] shadow-[0_30px_60px_rgba(0,0,0,0.8),0_15px_25px_rgba(0,0,0,0.6)] ring-1 ring-inset ring-[#333336] transition-shadow duration-300 hover:shadow-[0_40px_80px_rgba(0,0,0,0.9),0_20px_30px_rgba(0,0,0,0.7)]"
+          className="relative mx-auto flex h-full w-full flex-col justify-between overflow-hidden rounded-[4px] bg-primary-background p-[clamp(16px,4vw,32px)] shadow-[0_30px_60px_rgba(0,0,0,0.8),0_15px_25px_rgba(0,0,0,0.6)] ring-1 ring-inset ring-[#333336] transition-shadow duration-300 hover:shadow-[0_40px_80px_rgba(0,0,0,0.9),0_20px_30px_rgba(0,0,0,0.7)]"
         >
           {/* Reflective Sheen overlay */}
           <motion.div
@@ -61,13 +61,13 @@ export default function ContactPage(): React.JSX.Element {
             style={{ transform: "translateZ(30px)" }}
           >
             <h2
-              className="font-semibold text-white uppercase"
+              className="font-semibold text-secondary-text uppercase"
               style={{ fontSize: "clamp(14px, 4vw, 18px)", letterSpacing: "-0.015em" }}
             >
               Siddharth
             </h2>
             <p
-              className="mt-1 text-[#8A8A93]"
+              className="mt-1 text-tertiary-text"
               style={{ fontSize: "clamp(9px, 2.5vw, 11px)", letterSpacing: "0.025em" }}
             >
               [ SOFTWARE ENGINEER ]
@@ -106,10 +106,10 @@ function CopyableField({ icon, value }: { icon: React.ReactNode; value: string }
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={handleCopy}
-      className="group flex cursor-pointer items-center gap-3 rounded bg-transparent px-2 py-1.5 text-[#D4D4D8] transition-colors hover:bg-[#333336]/40"
+      className="group flex cursor-pointer items-center gap-3 rounded bg-transparent px-2 py-1.5 text-secondary-text transition-colors hover:bg-[#333336]/40"
       style={{ fontSize: "clamp(10px, 3vw, 12px)" }}
     >
-      <span className="text-[#8A8A93] group-hover:text-white transition-colors">{icon}</span>
+      <span className="text-tertiary-text group-hover:text-secondary-text transition-colors">{icon}</span>
       <span className="font-mono">
         {copied ? "[ COPIED TO CLIPBOARD ]" : hovered ? "[ COPY TO CLIPBOARD ]" : value}
       </span>

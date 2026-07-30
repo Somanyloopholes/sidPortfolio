@@ -69,7 +69,7 @@ export default function Dock() {
         panelHeight={48} 
         magnification={80}
         distance={100}
-        className="items-center justify-center rounded-xl bg-[#1e1e1e]/40 border border-white/10 shadow-2xl backdrop-blur-sm dark:bg-[#1e1e1e]/40 gap-1 sm:gap-3 px-2 sm:px-5"
+        className="items-center justify-center rounded-xl bg-primary-background/40 border border-white/10 shadow-2xl backdrop-blur-sm dark:bg-primary-background/40 gap-1 sm:gap-3 px-2 sm:px-5"
       >
         {dockRoutes.map((route) => {
           const Icon = route.icon;
@@ -85,7 +85,7 @@ export default function Dock() {
                   window.open(route.externalUrl, '_blank', 'noopener,noreferrer');
                 }
               }}
-              className={isActive ? "text-[#A6D800]" : "text-neutral-400 hover:text-white transition-colors"}
+              className={isActive ? "text-hero-accent" : "text-tertiary-text hover:text-secondary-text transition-colors"}
             >
               <DockLabel className="hidden sm:block">{route.label}</DockLabel>
               <DockIcon className="relative">
@@ -95,7 +95,7 @@ export default function Dock() {
           );
         })}
         
-        <DockItem className="text-neutral-400 hover:text-white transition-colors cursor-pointer">
+        <DockItem className="text-tertiary-text hover:text-secondary-text transition-colors cursor-pointer">
           <DockLabel className="hidden sm:block">Theme</DockLabel>
           <DockIcon className="relative">
             <AnimatedThemeToggler className="size-full" />
