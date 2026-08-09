@@ -24,7 +24,7 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ReactLenis root>
+    <ReactLenis root options={{ lerp: 0.07, smoothWheel: true }}>
       <RouterProvider router={router} />
     </ReactLenis>
   </StrictMode>,

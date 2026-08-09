@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Briefcase, FolderCode, Mail } from "lucide-react";
-import { AnimatedThemeToggler } from "@/Components/ui/animated-theme-toggler";
+
 import { Dock as MotionDock, DockIcon, DockItem, DockLabel } from "@/Components/motion-primitives/dock";
 
 const CustomGithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -69,7 +69,7 @@ export default function Dock() {
         panelHeight={48} 
         magnification={80}
         distance={100}
-        className="items-center justify-center rounded-xl bg-primary-background/40 border border-white/10 shadow-2xl backdrop-blur-sm dark:bg-primary-background/40 gap-1 sm:gap-3 px-2 sm:px-5"
+        className="items-center justify-center rounded-none bg-primary-background border border-hero-accent shadow-2xl dark:bg-primary-background gap-1 sm:gap-3 px-1 sm:px-2"
       >
         {dockRoutes.map((route) => {
           const Icon = route.icon;
@@ -95,12 +95,6 @@ export default function Dock() {
           );
         })}
         
-        <DockItem className="text-tertiary-text hover:text-secondary-text transition-colors cursor-pointer">
-          <DockLabel className="hidden sm:block">Theme</DockLabel>
-          <DockIcon className="relative">
-            <AnimatedThemeToggler className="size-full" />
-          </DockIcon>
-        </DockItem>
       </MotionDock>
     </div>
   );
