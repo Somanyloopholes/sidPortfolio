@@ -20,16 +20,17 @@ export interface Project {
   id: string;
   title: string;
   shortDescription: string;   // card view only
-  coverImage: string;         // card view — bento tile image
+  coverImage?: string;         // card view — bento tile image
   skills: string[];           // card/quick-scan tags
-  role: string;
-  problemStatement: string;
-  architecture: string;
-  methodology: string;
-  challenges: Challenge[];
-  techStack: TechStackItem[];
-  keyResults: KeyResult[];
-  impactsAndKeyTakeaways: string;
+  role?: string;
+  problemStatement?: string;
+  architecture?: string;
+  methodology?: string;
+  challenges?: Challenge[];
+  techStack?: TechStackItem[];
+  keyResults?: KeyResult[];
+  impactsAndKeyTakeaways?: string;
+  fullDescription?: string;   // legacy
   media: string[];            // full case study — gallery images/screenshots
   githubUrl?: string;
   liveUrl?: string;
@@ -60,6 +61,220 @@ export const skillsList = [
 ];
 
 export const projects: Project[] = [
+  {
+    id: "sidportfolio-engineering",
+    title: "Portfolio - Engineering the interface",
+    shortDescription:
+      "A React 19 / TypeScript SPA with physics-based motion, a scroll-driven timeline, and a markdown-powered case-study system.",
+    // coverImage: "" // TODO: bento tile image for card view
+    skills: [
+      "React 19",
+      "TypeScript",
+      "Vite",
+      "Tailwind CSS v4",
+      "Framer Motion",
+      "React Router",
+      "Component Architecture",
+    ],
+    role:
+      "Solo developer — architecture, component design, animation systems, and build tooling.",
+
+    problemStatement: `Most portfolio SPAs either ship a handful of static pages or bolt animation on top as an afterthought, which tends to show up as jank on scroll, inconsistent transition timing, or a data model that can't hold a real case study without breaking. I wanted a single codebase that could support a growing set of detailed, markdown-rendered case studies, animated page-to-page navigation that reads as intentional rather than decorative, and a component layer strict enough in TypeScript that adding new sections wouldn't quietly introduce bugs.`,
+
+    architecture: `**Shell:** \`main.tsx\` sets up the router (\`createBrowserRouter\`, four nested routes) and wraps the app in \`ReactLenis\` for smooth scrolling. \`App.tsx\` owns the layout shell — background pattern, nav, the animated outlet, and the dock — and is the single place that knows about page order.
+ 
+    **Routing & transitions:** \`App.tsx\` keeps a \`routeOrder\` array and a \`prevLocation\` ref. On every navigation it diffs the new route's index against the previous one to decide slide direction, then hands that direction to \`AnimatePresence\` (\`mode="popLayout"\`) via a custom prop. This is a small, self-contained piece of logic rather than a transition library, which kept it predictable and easy to reason about when adding new pages.
+    
+    **Content layer:** Project and case-study data lives in a typed \`data/projects.ts\` file, not a CMS or API — the site is fully static by design. The projects page filters that array client-side against active skill tags, and the case-study modal renders each project's markdown fields through \`react-markdown\` with a custom component map for styled paragraphs, links, images, and lists.
+    
+    **Motion primitives:** The contact card and the timeline both build directly on Framer Motion's lower-level hooks (\`useMotionValue\`, \`useSpring\`, \`useTransform\`) rather than its default animation presets, which is what makes the tilt and scroll-tracking feel physical instead of eased.`,
+
+    methodology: `I built the routing and transition shell first, before any real page content existed, because getting slide direction and mount/unmount timing right is the kind of thing that's painful to retrofit once pages have their own internal state. Everything after that was built and reviewed one section at a time — dock, contact card, timeline, project grid — rather than standing up whole pages at once, which made it easier to catch layout regressions early.
+    
+    For styling, I chose Tailwind CSS v4 specifically for its native support of CSS custom properties, since the site's color and spacing values needed to live as real design tokens rather than one-off utility values scattered through components. For animation, Framer Motion's hook-based API won out over CSS transitions because several interactions — the card tilt, the timeline's scroll-linked line — need continuous, physically-plausible values rather than discrete state-to-state transitions.
+    
+    TypeScript is configured in strict mode with \`noUnusedLocals\`, \`noUnusedParameters\`, and \`noFallthroughCasesInSwitch\` all enabled, which I kept on deliberately through the build rather than relaxing it to move faster — the case-study data model in particular has enough optional fields that loose typing would have made rendering bugs easy to miss.`,
+
+    challenges: [
+      {
+        title: "Directional transitions without a transition library",
+        description:
+          "Rather than pull in a page-transition package, I wrote the routeOrder-diffing logic by hand in App.tsx so I could control exactly how direction is computed and keep the dependency footprint down. The tradeoff is that adding a new top-level page means remembering to register it in the order array — a deliberate, documented constraint rather than a hidden one.",
+      },
+      {
+        title: "Height tracking for the scroll-driven timeline",
+        description:
+          "The timeline component started from an open-source layout primitive, but its default height calculation didn't hold up against this site's content, which resizes based on variable-length entries. I rewrote the height logic using ResizeObserver against the first and last icon refs, plus a custom getOffsetTop helper that walks the offsetParent chain so the calculation stays correct even when a parent has a CSS transform applied — the default offsetTop approach breaks under transforms, which the page transitions rely on.",
+      },
+      {
+        title: "3D tilt without a 3D library",
+        description:
+          "The business card's perspective tilt and glare are done entirely with CSS transforms driven by Framer Motion's motion values — no three.js or WebGL. That kept the bundle lean, but meant hand-tuning the spring config and translateZ layering to get the parallax to read as physical rather than just tilted.",
+      },
+      {
+        title: "A flexible but type-safe case-study data model",
+        description:
+          "Case studies vary in how much detail they have — some fields are fully populated, others are still placeholders. Modeling that with a mix of required and optional TypeScript fields, while keeping the modal's rendering logic simple, took a few passes before the interface struck the right balance between flexibility and actually catching missing-data bugs at compile time.",
+      },
+    ],
+
+    techStack: [
+      { name: "React", category: "Framework", version: "19.2.0" },
+      {
+        name: "TypeScript",
+        category: "Language",
+        version: "~5.9.3",
+        note: "strict mode, noUnusedLocals/Params, noFallthroughCasesInSwitch",
+      },
+      { name: "Vite", category: "Build Tool", version: "7.3.1" },
+      { name: "Tailwind CSS", category: "Styling", version: "4.2.1" },
+      { name: "Motion (Framer Motion)", category: "Animation", version: "12.42.2" },
+      { name: "React Router DOM", category: "Routing", version: "7.14.1" },
+      {
+        name: "Lenis",
+        category: "Scroll",
+        version: "1.3.25",
+        note: "drives the scroll-linked timeline animation",
+      },
+      { name: "react-markdown", category: "Content Rendering", version: "10.1.0" },
+      { name: "shadcn/ui", category: "Component Primitives", version: "4.13.0" },
+    ],
+
+    keyResults: [
+      { label: "Commits", value: "13", note: "solo, single contributor" },
+      {
+        label: "Case studies shipped",
+        value: "7",
+        note: "5 project case studies + 2 design case studies, each with a full markdown-rendered detail view",
+      },
+      {
+        label: "TypeScript strictness",
+        value: "Strict mode",
+        note: "noUnusedLocals, noUnusedParameters, noFallthroughCasesInSwitch all enabled",
+      },
+      {
+        label: "Production build",
+        value: "Verified locally",
+        note: "npm run build completes; not yet deployed",
+      },
+    ],
+
+    impactsAndKeyTakeaways: `Building the transition and data layers first, before content, paid off — every new page and case study since has slotted into an existing structure instead of needing its own one-off logic. The biggest engineering lesson was around motion: reaching for Framer Motion's raw hooks instead of its animation presets took more upfront tuning but gave far more control over how the tilt, scroll-tracking, and dock magnification actually feel, which matters more on a portfolio than almost anywhere else. I'd make the same tradeoff again — hand-write the pieces that need to feel exact, and only reach for a library when the problem is genuinely generic.`,
+
+    media: [
+      // TODO: screenshots/gifs — dock magnification, contact card tilt, timeline scroll, case-study modal
+    ],
+
+    githubUrl: "https://github.com/Somanyloopholes/sidPortfolio",
+    // liveUrl: "" // not yet deployed
+  },
+  {
+    id: "sidportfolio-design",
+    title: "Portfolio - Designing the system",
+    shortDescription:
+      "A single-accent, five-token color system and a role-based type scale, built in Figma and disciplined enough to hold up across a website, a LinkedIn banner, a GitHub README, and my own hardware.",
+    // coverImage: "" // TODO: bento tile image for card view
+    skills: [
+      "Figma",
+      "Design Systems",
+      "Typography",
+      "Color Theory",
+      "Brand Identity",
+      "Figma MCP",
+    ],
+    role:
+      "Solo designer — visual identity, token architecture, and the Figma-to-code handoff structure.",
+
+    problemStatement: `Most portfolio sites default to the same palette — near-black background, a blue accent, done. I wanted something that read as a deliberate identity rather than a default, without tipping into the kind of maximalism that stops being legible. The harder version of that problem: the system couldn't just work on one page. It needed to survive being pulled onto a LinkedIn banner, rendered inside a GitHub README in both light and dark themes, and even reproduced on hardware — my Windows accent color and keyboard RGB are both set to match it now. A system that only works on one background isn't really a system.`,
+
+    architecture: `**Color:** Five Figma variables, flat and kebab-cased — \`primary-bg\` (#131314), \`secondary-text\` (#F4F4F5), \`tertiary-text\` (#A1A1AA), \`hero-accent\` (#A6D800), and \`surface-dock\` (a 15% tint of the background used specifically for the dock's glass-like surface). Four neutrals and exactly one accent — the constraint is the point.
+ 
+**Type:** A role-based scale, not a size-based one — styles are named for what they do (\`display-hero\`, \`section-heading\`, \`sub-heading\`, \`title-small\`, \`body-prose\`, \`body-emphasis\`, \`micro-tag\`, \`statement-mono\`) rather than their pixel value, with a parallel mobile scale that recalculates line-height and size per style rather than just scaling everything down uniformly.
+ 
+**Layout:** Every frame in the Figma file is built with auto-layout — spacing and sizing are encoded as structure inside the file itself, not eyeballed and left implicit. That structure is what actually crosses over into code: it's the difference between a design file that documents intent and one that only shows a result.
+ 
+**Handoff:** Figma → Figma MCP → Antigravity. The MCP server exposes the variables, styles, and auto-layout structure as context Antigravity can read directly, rather than requiring the design system to be redescribed in a prompt. The free tier caps out at 6 tool calls a month, which rules out using it as a continuous sync — so the workflow treats it as a one-time extraction: pull the full variable and style set once, capture it directly into \`index.css\` as Tailwind CSS v4 custom properties, and treat that file as the canonical source from then on, going back to MCP only when the token set itself actually changes.`,
+
+    methodology: `I settled on the color scheme before I built a single token — the five-variable, one-accent structure came after the decision, not before it. That ordering mattered: it meant the system was built to express a choice I'd already made, rather than being assembled first and colored in after.
+ 
+The palette itself is a reaction against the usual portfolio defaults. I wanted a strict monotone base with exactly one accent doing all the work, in the spirit of how accessible color-pairing tools like randoma11y treat contrast — deliberately, not decoratively — combined with a willingness to let that one accent be loud, which is closer to what I took from Bungie's *Marathon* art direction: vibrant, graphic, unapologetic about being the focal point of every frame it appears in. The system is quiet everywhere except the one place it isn't.
+ 
+Typography followed the same logic. Geist Mono carries the bold display moments — the same instinct Palantir uses a heavy, technical-feeling font for its hero type — while Inter handles body copy where actual readability matters more than character, and JetBrains Mono is reserved for anything meant to read as code or a system statement.
+ 
+The first real pass at the visual direction wasn't this one. I built it out in glassmorphism first, got far enough to actually look at it, and realized it read as generic — a style everyone's portfolio was already doing rather than a specific choice. I killed that direction and rebuilt around the current graphic-and-typography-led system instead of trying to salvage it.`,
+
+    challenges: [
+      {
+        title: "Reconciling loud and quiet influences",
+        description:
+          "Marathon's art direction and an accessibility-first color tool pull in opposite directions — one wants maximum visual energy, the other wants restraint and legibility above all else. I resolved it by scoping where each one gets to win: the accent color is allowed to be loud because it's the only color in the system, and everything else — the four neutrals, the type scale, the grid — stays disciplined so the one loud decision actually reads as a decision instead of noise.",
+      },
+      {
+        title: "Killing the glassmorphism direction",
+        description:
+          "I had a working glassmorphism pass before this system existed. It looked fine and it also looked like every other portfolio site right now. Recognizing that and rebuilding from a different starting point was a bigger factor in how the site turned out than any individual visual refinement inside either direction.",
+      },
+      {
+        title: "Working around the Figma MCP free-tier cap",
+        description:
+          "A 6-tool-call-per-month cap makes it impossible to treat Figma MCP as a live design source you query on demand. I restructured the workflow around that constraint instead of working against it — one deliberate full export, captured into index.css, treated as canonical until the token set itself changes.",
+      },
+      {
+        title: "Making one identity hold across four different surfaces",
+        description:
+          "The same five-token, one-accent system has to read correctly on the site itself (interactive, full control over background), a LinkedIn banner (fixed aspect ratio, sitting in a feed next to everything else), a GitHub README (rendered in both GitHub's light and dark themes, outside my control), and physical hardware (Windows accent color and keyboard RGB, with far less color accuracy than a browser gives you). Keeping the system simple — one accent, four neutrals — was what made it portable across constraints that different in the first place.",
+      },
+    ],
+
+    techStack: [
+      { name: "Figma", category: "Design Tool" },
+      {
+        name: "Figma Variables",
+        category: "Design Tokens",
+        note: "flat, kebab-case naming — primary-bg, secondary-text, tertiary-text, hero-accent, surface-dock",
+      },
+      {
+        name: "Figma MCP",
+        category: "Design-to-Code Handoff",
+        note: "free tier capped at 6 tool calls/month",
+      },
+      { name: "Antigravity", category: "Agentic Build Tool" },
+      { name: "Auto Layout", category: "Layout System" },
+      { name: "Geist Mono / Inter / JetBrains Mono", category: "Typography" },
+    ],
+
+    keyResults: [
+      {
+        label: "Color tokens",
+        value: "5",
+        note: "primary-bg, secondary-text, tertiary-text, hero-accent, surface-dock — one accent, rest neutral",
+      },
+      {
+        label: "Type styles",
+        value: "8 desktop / 6+ mobile",
+        note: "named by role (display-hero through micro-tag), not by pixel size",
+      },
+      {
+        label: "Brand surfaces",
+        value: "4",
+        note: "site, LinkedIn banner, GitHub README, OS accent color + keyboard RGB",
+      },
+      {
+        label: "Figma MCP usage",
+        value: "1 full export",
+        note: "captured into index.css once due to the 6-call/month free-tier cap; re-run only on deliberate token changes",
+      },
+    ],
+
+    impactsAndKeyTakeaways: `Designing for four surfaces instead of one forced a kind of discipline that designing for a single page never would have — a system that only survives on one background isn't a system, it's a page. The decision that mattered most wasn't any single color or font choice; it was killing the glassmorphism direction early instead of polishing something that was fundamentally the wrong starting point. And on the handoff side, the clearest lesson was that Antigravity could only rebuild what the Figma file made legible — named variables, auto-layout structure, and a genuinely small token set did more for the Figma-to-code pipeline than any amount of prompting would have.`,
+
+    media: [
+      // TODO: Figma variables panel, typography scale panel, project-page mockup, before/after glassmorphism comparison
+    ],
+
+    githubUrl: "https://github.com/Somanyloopholes/sidPortfolio",
+    // liveUrl: "" // not yet deployed
+  },
   {
     id: "signpose-vr",
     title: "SignPoseVR — Learn ASL in VR",
@@ -424,65 +639,5 @@ export const projects: Project[] = [
       "/projects/confidential-ml/docker-compose-setup.png",
       "/projects/confidential-ml/ci-pipeline.png",
     ],
-  },
-  {
-    id: "proj-1",
-    title: "High-Performance Trading Engine",
-    shortDescription: "A low-latency trading engine built in C++ capable of processing millions of orders per second.",
-    fullDescription: "This project explores the architecture of a high-frequency trading engine. Built from scratch using C++, it leverages lock-free data structures and custom memory allocators to ensure ultra-low latency. The system architecture is designed for maximum throughput and minimal jitter, trading off memory overhead for speed.",
-    skills: ["C++", "Linux", "Git"],
-    githubUrl: "https://github.com",
-    liveUrl: "https://example.com",
-    media: []
-  },
-  {
-    id: "proj-2",
-    title: "Distributed Task Scheduler",
-    shortDescription: "Scalable background job processing system utilizing Apache Kafka and PostgreSQL.",
-    fullDescription: "Designed and implemented a distributed task scheduler to handle thousands of background jobs across multiple worker nodes. It uses Apache Kafka as the message broker for fault-tolerant task distribution and PostgreSQL for durable state tracking.",
-    skills: ["Python", "Apache Kafka", "PostgreSQL", "Docker", "Docker Compose"],
-    githubUrl: "https://github.com",
-    liveUrl: "https://example.com",
-    media: []
-  },
-  {
-    id: "proj-3",
-    title: "Real-time Analytics Dashboard",
-    shortDescription: "Interactive web dashboard for visualizing streaming data with milliseconds latency.",
-    fullDescription: "A comprehensive analytics dashboard that consumes real-time data streams. The frontend is heavily optimized using custom hooks and memoization strategies to prevent rendering bottlenecks when visualizing thousands of data points.",
-    skills: ["JavaScript", "Python", "SQLite"],
-    githubUrl: "https://github.com",
-    liveUrl: "https://example.com",
-    media: []
-  },
-  {
-    id: "proj-4",
-    title: "Microservices Deployment Pipeline",
-    shortDescription: "Automated CI/CD workflows using GitHub Actions for containerized microservices.",
-    fullDescription: "Built a fully automated CI/CD pipeline for a suite of microservices. The workflow handles linting, testing with pytest, building Docker images, and deploying to staging and production environments automatically.",
-    skills: ["GitHub Actions CI/CD", "Docker", "pytest", "Linux"],
-    githubUrl: "https://github.com",
-    liveUrl: "https://example.com",
-    media: []
-  },
-  {
-    id: "proj-5",
-    title: "3D Procedural World Generator",
-    shortDescription: "Unity-based tool for generating expansive, realistic terrains and biomes.",
-    fullDescription: "A procedural generation system within Unity that creates massive, continuous 3D environments using Perlin noise and cellular automata. The tool provides a suite of configuration parameters for designers to tweak terrain features in real-time.",
-    skills: ["C#", "Unity"],
-    githubUrl: "https://github.com",
-    liveUrl: "https://example.com",
-    media: []
-  },
-  {
-    id: "proj-6",
-    title: "Enterprise Inventory Manager",
-    shortDescription: "Robust Java backend for tracking and managing global inventory across warehouses.",
-    fullDescription: "An enterprise-grade inventory management system that provides robust APIs for tracking stock movements globally. It implements strict ACID transactions via SQL databases to ensure absolute data consistency under high concurrent load.",
-    skills: ["Java", "SQL", "Git", "Jira"],
-    githubUrl: "https://github.com",
-    liveUrl: "https://example.com",
-    media: []
   }
 ];

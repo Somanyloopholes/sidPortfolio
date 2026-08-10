@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import './App.css';
 import Navbar from "./Components/Navbar.tsx";
 import Dock from "./Components/Dock.tsx";
+import PlusPatternBackground from "./Components/PlusPatternBackground.tsx";
 
 const routeOrder = ['/', '/projects', '/experience', '/contact'];
 
@@ -44,7 +45,8 @@ function App() {
   };
 
   return (
-    <div className='flex min-h-screen w-full flex-col bg-[#141413] text-[#faf9f5] font-inter overflow-x-hidden'>
+    <div className='flex min-h-screen w-full flex-col bg-[#141413] text-[#faf9f5] font-inter overflow-x-hidden relative'>
+      <PlusPatternBackground />
       <Navbar />
       <main className='mt-14 flex-1 flex w-full relative'>
         <AnimatePresence mode="popLayout" custom={direction} initial={false}>
