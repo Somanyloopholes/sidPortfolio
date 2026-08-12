@@ -38,26 +38,46 @@ export interface Project {
 
 export const skillsList = [
   "All",
-  "C++",
-  "JavaScript",
   "Python",
   "Java",
+  "JavaScript",
   "C#",
+  "C++",
   "SQL",
+  "R",
   "Docker",
-  "Docker Compose",
-  "GitHub Actions CI/CD",
-  "pytest",
+  "Flask",
   "Apache Kafka",
-  "PostgreSQL",
-  "SQLite",
+  "REST apis",
   "Git",
+  "FAISS",
+  "Scikit-learn",
+  "Pandas",
+  "Numpy",
+  "RAG",
+  "LLM Integration",
+  "Spatial Analysis",
+  "Network Science",
+  "Louvain Clustering",
+  "Data Visualization",
+  "Federated Learning",
+  "Homomorphic Encryption",
+  "Differential Privacy",
+  "React",
+  "TypeScript",
+  "Tailwind",
+  "Vite",
+  "Streamlit",
+  "Figma",
+  "Figma MCP",
+  "UI/UX",
   "Linux",
-  "Unity",
   "Jira",
+  "Unity",
   "Meta XR SDK",
   "Unity XR SDK",
-  "Open XR"
+  "Open XR",
+  "VR"
 ];
 
 export const projects: Project[] = [
@@ -66,15 +86,12 @@ export const projects: Project[] = [
     title: "Portfolio - Engineering the interface",
     shortDescription:
       "A React 19 / TypeScript SPA with physics-based motion, a scroll-driven timeline, and a markdown-powered case-study system.",
-    // coverImage: "" // TODO: bento tile image for card view
+    coverImage: "/portfolioEngineeringCover.png",
     skills: [
-      "React 19",
+      "React",
       "TypeScript",
-      "Vite",
-      "Tailwind CSS v4",
-      "Framer Motion",
-      "React Router",
-      "Component Architecture",
+      "Tailwind",
+      "Vite"
     ],
     role:
       "Solo developer — architecture, component design, animation systems, and build tooling.",
@@ -173,14 +190,12 @@ export const projects: Project[] = [
     title: "Portfolio - Designing the system",
     shortDescription:
       "A single-accent, five-token color system and a role-based type scale, built in Figma and disciplined enough to hold up across a website, a LinkedIn banner, a GitHub README, and my own hardware.",
-    // coverImage: "" // TODO: bento tile image for card view
+    coverImage: "/portfolioDesignCover.png",
     skills: [
       "Figma",
       "Design Systems",
-      "Typography",
-      "Color Theory",
-      "Brand Identity",
-      "Figma MCP",
+      "UI/UX",
+      "Figma MCP"
     ],
     role:
       "Solo designer — visual identity, token architecture, and the Figma-to-code handoff structure.",
@@ -280,7 +295,7 @@ The first real pass at the visual direction wasn't this one. I built it out in g
     title: "SignPoseVR — Learn ASL in VR",
     shortDescription:
       "A controller-free VR app for learning the ASL alphabet and digits on Meta Quest, with real-time hand-tracking feedback.",
-    coverImage: "/images/signpose/cover.png",
+    coverImage: "/SignPoseCover.png",
     skills: ["C#", "Unity", "VR", "Meta XR SDK", "Unity XR SDK", "Open XR"],
     role: "Solo project — designed, built, and published the full application to the Meta Horizon Store.",
     problemStatement:
@@ -347,19 +362,18 @@ The first real pass at the visual direction wasn't this one. I built it out in g
     ],
     githubUrl: "https://github.com/Somanyloopholes/SignPoseVR",
     liveUrl: "https://www.meta.com/experiences/24069781642651333/"
-  }, {
+  },
+  {
     id: "spatial-inequality-cook-county",
-    title: "Spatial Inequality Analysis: Neighborhood Evolution in Cook County",
+    title: "Neighborhood Evolution in Cook County",
     shortDescription:
       "A decade-long spatial network analysis tracking how Cook County neighborhoods shift between seven distinct typologies — built with KNN similarity graphs and Louvain community detection instead of fixed administrative boundaries.",
-    coverImage: "/projects/spatial-inequality/cover.png",
+    coverImage: "/CookCountyCover.png",
     skills: [
       "R",
       "Spatial Analysis",
       "Network Science",
       "Louvain Clustering",
-      "Census Data",
-      "GIS",
       "Data Visualization",
     ],
     role: "Solo project — designed the full analytical methodology (variable selection, KNN parameter tuning, meta-cluster interpretation) and authored all 10 R pipeline scripts, from data ingestion through final visualization.",
@@ -451,7 +465,7 @@ The first real pass at the visual direction wasn't this one. I built it out in g
     title: "IIT Campus Assistant",
     shortDescription:
       "A hybrid RAG-SQL campus chatbot for Illinois Institute of Technology that ingests live dining menus and campus events over Apache Kafka, stores structured data in SQLite, builds FAISS vector indexes for semantic search, and uses Llama-3 (via Groq) to route and answer natural-language questions.",
-    coverImage: "/projects/campus-assistant/cover.png",
+    coverImage: "/campusAssistantCover.png",
     skills: [
       "Python",
       "Apache Kafka",
@@ -552,7 +566,7 @@ The first real pass at the visual direction wasn't this one. I built it out in g
     title: "ConfidentialML: Privacy-Preserving Federated Learning",
     shortDescription:
       "A containerized federated learning system combining Paillier homomorphic encryption with Gaussian differential privacy, so multiple clients can jointly train a logistic regression model without the server — or any other party — ever seeing raw data or plaintext model updates.",
-    coverImage: "/projects/confidential-ml/cover.png",
+    coverImage: "/confidentialMLCover.png",
     skills: [
       "Python",
       "Federated Learning",
@@ -560,7 +574,6 @@ The first real pass at the visual direction wasn't this one. I built it out in g
       "Differential Privacy",
       "Flask",
       "Docker",
-      "Distributed Systems",
     ],
     role: "Co-built with one other contributor, roughly equal (~50/50) split across the codebase — server orchestration, client-side training/encryption/DP logic, Docker-based multi-container deployment, and the final report and presentation. The team worked feature-branch by feature-branch (FedAvg, homomorphic encryption, ML implementation, differential privacy), so component-level ownership isn't individually tracked.",
 
@@ -638,6 +651,82 @@ The first real pass at the visual direction wasn't this one. I built it out in g
       "/projects/confidential-ml/round-lifecycle.png",
       "/projects/confidential-ml/docker-compose-setup.png",
       "/projects/confidential-ml/ci-pipeline.png",
+    ],
+  },
+  {
+    id: "ieee-iit-style-guide",
+    title: "IEEE@IIT Style Guide",
+    shortDescription:
+      "A unified design system reconciling IEEE's and Illinois Tech's brand identities into one practical style guide, then used to produce the chapter's on-brand event materials.",
+    coverImage: "/IEEExIITcover.png",
+    skills: [
+      "Figma",
+      "UI/UX"
+    ],
+    role: "Board Member, IEEE Student Chapter — Illinois Institute of Technology",
+
+    problemStatement:
+      "As a board member responsible for the chapter's visual output, I was designing posters and materials that had to represent two separate brands at once — IEEE's global identity and Illinois Tech's institutional identity — with no shared reference for how they should be combined. Every new poster meant re-deciding the same things: which blue, which logo lockup, which pairing was actually correct.",
+
+    architecture:
+      "The guide is structured in four layers that build on each other: a color system (primary palette plus a tint scale for flexible secondary use), a modular typographic scale (H1–H5, body, small), a component layer (buttons, forms, alerts, tags, tooltips) so the system could extend past print into digital work, and — the core of the project — a logo lockup matrix covering IEEE alone, IEEE + Illinois Tech side-by-side, abbreviated and combined marks, and light/dark-mode variants.",
+
+    methodology:
+      "I audited both IEEE's and Illinois Tech's existing brand guidelines to identify the non-negotiable constraints from each side, then extracted the primary colors and typography into a shared token set. From there I defined interactive states (default, hover, disabled) for reusable components, and built out every approved logo pairing as its own documented lockup rather than leaving combination rules to individual judgment. The guide was then applied directly to real deliverables — chapter event posters — rather than treated as a standalone reference document.",
+
+    challenges: [
+      {
+        title: "Reconciling two brand identities",
+        description:
+          "IEEE and Illinois Tech each have their own strict, independent brand guidelines. Neither could be overridden, so the work was entirely about finding a structure — color tints, lockup variants, pairing rules — that respected both without either brand looking secondary.",
+      },
+      {
+        title: "Making it usable by the whole board, not just me",
+        description:
+          "A style guide only helps if other people can apply it without asking. I had to be explicit enough — pre-approved lockups, defined states, a full type scale — that any board member could pull from it directly and produce compliant work.",
+      },
+    ],
+
+    techStack: [
+      { name: "Figma", category: "Design Tool" },
+      {
+        name: "Feather Icons",
+        category: "Icon System",
+        note: "Standardized at 24px with a 2px stroke weight",
+      },
+      {
+        name: "Modular Scale",
+        category: "Typography",
+        note: "Ratio-based scale driving the H1–H5 and body sizing",
+      },
+    ],
+
+    keyResults: [
+      {
+        label: "Logo lockups defined",
+        value: "13+",
+        note: "Covering IEEE-alone, co-branded, abbreviated, and light/dark-mode variants",
+      },
+      {
+        label: "Components specified",
+        value: "6",
+        note: "Buttons, form fields, alerts, tags, tooltips, toggles",
+      },
+      {
+        label: "Applied to",
+        value: "Chapter poster series",
+        note: "Colors, type, and lockups pulled directly from the spec for real events",
+      },
+    ],
+
+    impactsAndKeyTakeaways:
+      "The guide gave the chapter a single source of truth for brand-compliant materials, removing the recurring back-and-forth over which blue or which logo pairing was safe to use. Posters produced from the spec stayed visually consistent even when made weeks apart by different people. The bigger lesson was that a style guide is only as good as its second use — the harder part isn't making a document look good, it's making the decisions concrete enough that someone else can actually apply them under a deadline without re-litigating brand choices.",
+
+    media: [
+      // Add screenshots of the style guide sections and the finished posters, e.g.:
+      // "/projects/ieee-iit/style-guide-colors.png",
+      // "/projects/ieee-iit/poster-1.png",
+      // "/projects/ieee-iit/poster-2.png",
     ],
   }
 ];

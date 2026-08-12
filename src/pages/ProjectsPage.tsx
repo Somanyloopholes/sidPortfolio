@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ExternalLink } from 'lucide-react';
 import { projects, skillsList, type Project } from '../data/projects';
@@ -47,6 +47,31 @@ const AbstractBanner = () => (
 );
 
 export default function ProjectsPage() {
+  const outerContainerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const outer = outerContainerRef.current;
+    const inner = scrollContainerRef.current;
+    if (!outer || !inner) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Native smooth scrolling to mimic Lenis momentum
+        inner.scrollBy({
+          left: e.deltaY * 1.5,
+          behavior: 'smooth'
+        });
+      }
+    };
+
+    outer.addEventListener('wheel', handleWheel, { passive: false, capture: true });
+    return () => outer.removeEventListener('wheel', handleWheel);
+  }, []);
+
   const [activeSkills, setActiveSkills] = useState<string[]>(["All"]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
@@ -85,15 +110,15 @@ export default function ProjectsPage() {
     <section className="flex min-h-[calc(100vh-3.5rem)] w-full flex-col items-center justify-start pt-0 pb-24 px-4 md:px-8 max-w-7xl mx-auto">
       
       {/* Skill Filter Bar */}
-      <div className="w-full border border-hero-accent px-2 py-1 md:px-4 md:py-2 mb-6 bg-[#141413]">
-        <div className="flex gap-2 overflow-x-auto md:flex-wrap md:overflow-visible [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div ref={outerContainerRef} className="w-full border border-hero-accent px-2 py-1 md:px-4 md:py-2 mb-6 bg-[#141413]">
+        <div ref={scrollContainerRef} className="grid grid-rows-2 grid-flow-col auto-cols-max gap-2 overflow-x-auto overflow-y-hidden w-full pb-2">
           {skillsList.map(skill => {
             const isActive = activeSkills.includes(skill);
             return (
               <button
                 key={skill}
                 onClick={() => toggleSkill(skill)}
-                className={`px-4 py-2 text-micro-tag rounded-none border border-hero-accent transition-colors duration-200 whitespace-nowrap shrink-0 ${
+                className={`px-2 py-1 text-micro-tag rounded-none border border-hero-accent transition-colors duration-200 whitespace-nowrap shrink-0 ${
                   isActive 
                   ? 'bg-hero-accent text-primary-background' 
                   : 'bg-transparent text-tertiary-text hover:text-secondary-text hover:bg-hero-accent/10'
@@ -127,8 +152,8 @@ export default function ProjectsPage() {
                 className={`w-full ${spanClass} border border-hero-accent bg-[#141413] cursor-pointer rounded-none flex flex-col hover:border-hero-accent transition-colors group relative`}
               >
                 {project.coverImage ? (
-                  <div className="w-full h-32 md:h-48 border-b border-hero-accent relative overflow-hidden bg-black shrink-0">
-                    <img src={project.coverImage} alt={project.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                  <div className="w-full border-b border-hero-accent relative bg-black shrink-0">
+                    <img src={project.coverImage} alt={project.title} className="w-full h-auto block opacity-80 group-hover:opacity-100 transition-opacity" />
                   </div>
                 ) : (
                   <AbstractBanner />
@@ -182,8 +207,8 @@ export default function ProjectsPage() {
                         {/* Left: Image */}
                         <div className="w-full md:w-[45%] shrink-0">
                           {selectedProject.coverImage ? (
-                            <div className="w-full aspect-video border border-hero-accent relative overflow-hidden bg-black">
-                              <img src={selectedProject.coverImage} alt={selectedProject.title} className="w-full h-full object-cover opacity-90" />
+                            <div className="w-full border border-hero-accent relative bg-black">
+                              <img src={selectedProject.coverImage} alt={selectedProject.title} className="w-full h-auto block opacity-90" />
                             </div>
                           ) : (
                             <div className="w-full border border-hero-accent">

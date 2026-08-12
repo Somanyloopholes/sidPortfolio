@@ -15,9 +15,9 @@ export default function PlusPatternBackground() {
               <path 
                 d="M 16 12.5 L 16 19.5 M 12.5 16 L 19.5 16" 
                 fill="none" 
-                stroke="#A6D800" 
+                stroke="#A1A1AA" 
                 strokeWidth="1" 
-                opacity="0.10"
+                opacity="0.35"
               />
             </pattern>
           </defs>

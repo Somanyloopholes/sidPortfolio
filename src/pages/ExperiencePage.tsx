@@ -61,7 +61,7 @@ export default function ExperiencePage() {
   ];
 
   return (
-    <section className="flex min-h-[calc(100vh-3.5rem)] w-full flex-col items-center justify-start pt-12 pb-24 px-4">
+    <section className="flex min-h-[calc(100vh-3.5rem)] w-full flex-col items-center justify-start pt-2 md:pt-4 pb-24 px-4">
       <div className="w-full max-w-5xl flex flex-col gap-8">
         <Timeline data={data} />
       </div>
