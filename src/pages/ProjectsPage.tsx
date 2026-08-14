@@ -12,7 +12,7 @@ const getMarkdownComponents = (textClass: string = "text-tertiary-text") => ({
   li: ({ children }: any) => <li className="mb-1">{children}</li>,
   img: ({ src, alt }: any) => (
     <div className="w-full my-6 flex items-center justify-center">
-      <img src={src} alt={alt} className="max-w-full h-auto object-contain border border-hero-accent/30 bg-[#0a0a0a]" />
+      <img src={src} alt={alt} className="max-w-full h-auto object-contain border border-hero-accent/30 bg-primary-background" />
     </div>
   )
 });
@@ -35,7 +35,7 @@ const CustomGithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 const AbstractBanner = () => (
-  <div className="w-full h-32 md:h-48 bg-[#141413] flex items-center justify-center border-b border-hero-accent relative overflow-hidden">
+  <div className="w-full h-32 md:h-48 bg-primary-background flex items-center justify-center border-b border-hero-accent relative overflow-hidden">
     {/* Dithered / Abstract Geometry Pattern */}
     <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#A6D800_1px,transparent_1px)] [background-size:16px_16px]" />
     <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-hero-accent z-10">
@@ -106,28 +106,66 @@ export default function ProjectsPage() {
     };
   }, [selectedProject]);
 
+  // Calculate split index based on string length to physically balance the two rows
+  const totalChars = skillsList.reduce((acc, skill) => acc + skill.length, 0);
+  let runningChars = 0;
+  let splitIndex = 0;
+  for (let i = 0; i < skillsList.length; i++) {
+    runningChars += skillsList[i].length;
+    if (runningChars >= totalChars / 2) {
+      splitIndex = i + 1;
+      break;
+    }
+  }
+
+  const row1Skills = skillsList.slice(0, splitIndex);
+  const row2Skills = skillsList.slice(splitIndex);
+
   return (
-    <section className="flex min-h-[calc(100vh-3.5rem)] w-full flex-col items-center justify-start pt-0 pb-24 px-4 md:px-8 max-w-7xl mx-auto">
+    <section className="flex min-h-[calc(100vh-3.5rem)] w-full flex-col items-center justify-start pt-0 pb-24 px-8 md:px-12 max-w-7xl mx-auto">
       
       {/* Skill Filter Bar */}
-      <div ref={outerContainerRef} className="w-full border border-hero-accent px-2 py-1 md:px-4 md:py-2 mb-6 bg-[#141413]">
-        <div ref={scrollContainerRef} className="grid grid-rows-2 grid-flow-col auto-cols-max gap-2 overflow-x-auto overflow-y-hidden w-full pb-2">
-          {skillsList.map(skill => {
-            const isActive = activeSkills.includes(skill);
-            return (
-              <button
-                key={skill}
-                onClick={() => toggleSkill(skill)}
-                className={`px-2 py-1 text-micro-tag rounded-none border border-hero-accent transition-colors duration-200 whitespace-nowrap shrink-0 ${
-                  isActive 
-                  ? 'bg-hero-accent text-primary-background' 
-                  : 'bg-transparent text-tertiary-text hover:text-secondary-text hover:bg-hero-accent/10'
-                }`}
-              >
-                {skill}
-              </button>
-            )
-          })}
+      <div ref={outerContainerRef} className="w-full border border-hero-accent px-2 py-1 md:px-4 md:py-2 mb-6 bg-primary-background">
+        <div ref={scrollContainerRef} className="flex flex-col gap-2 overflow-x-auto overflow-y-hidden w-full pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          
+          <div className="flex gap-2 w-max">
+            {row1Skills.map(skill => {
+              const isActive = activeSkills.includes(skill);
+              return (
+                <button
+                  key={skill}
+                  onClick={() => toggleSkill(skill)}
+                  className={`px-2 py-1 text-micro-tag rounded-none border border-hero-accent transition-colors duration-200 whitespace-nowrap shrink-0 ${
+                    isActive 
+                    ? 'bg-hero-accent text-primary-background' 
+                    : 'bg-transparent text-tertiary-text hover:text-secondary-text hover:bg-hero-accent/10'
+                  }`}
+                >
+                  {skill}
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="flex gap-2 w-max">
+            {row2Skills.map(skill => {
+              const isActive = activeSkills.includes(skill);
+              return (
+                <button
+                  key={skill}
+                  onClick={() => toggleSkill(skill)}
+                  className={`px-2 py-1 text-micro-tag rounded-none border border-hero-accent transition-colors duration-200 whitespace-nowrap shrink-0 ${
+                    isActive 
+                    ? 'bg-hero-accent text-primary-background' 
+                    : 'bg-transparent text-tertiary-text hover:text-secondary-text hover:bg-hero-accent/10'
+                  }`}
+                >
+                  {skill}
+                </button>
+              )
+            })}
+          </div>
+          
         </div>
       </div>
 
@@ -149,16 +187,16 @@ export default function ProjectsPage() {
                 transition={{ layout: { type: "spring", stiffness: 300, damping: 30 } }}
                 key={project.id}
                 onClick={() => setSelectedProject(project)}
-                className={`w-full ${spanClass} border border-hero-accent bg-[#141413] cursor-pointer rounded-none flex flex-col hover:border-hero-accent transition-colors group relative`}
+                className={`w-full ${spanClass} border border-hero-accent bg-primary-background cursor-pointer rounded-none flex flex-col hover:border-hero-accent transition-colors group relative`}
               >
                 {project.coverImage ? (
-                  <div className="w-full border-b border-hero-accent relative bg-black shrink-0">
+                  <div className="w-full border-b border-hero-accent relative bg-primary-background shrink-0">
                     <img src={project.coverImage} alt={project.title} className="w-full h-auto block opacity-80 group-hover:opacity-100 transition-opacity" />
                   </div>
                 ) : (
                   <AbstractBanner />
                 )}
-                <div className="p-6 flex flex-col gap-3">
+                <div className="p-8 flex flex-col gap-4">
                   <h3 className="text-sub-heading text-secondary-text group-hover:text-hero-accent transition-colors uppercase tracking-wide">{project.title}</h3>
                   <p className="text-body-prose text-tertiary-text line-clamp-3">{project.shortDescription}</p>
                 </div>
@@ -190,7 +228,7 @@ export default function ProjectsPage() {
                   exit={{ opacity: 0, y: 20, scale: 0.95 }}
                   transition={{ type: "spring", duration: 0.5, bounce: 0 }}
                   onClick={(e) => e.stopPropagation()}
-                  className="w-full max-w-5xl mx-auto my-4 md:my-12 bg-[#141413] border border-hero-accent rounded-none flex flex-col shadow-[0_0_40px_rgba(166,216,0,0.15)] overflow-hidden"
+                  className="w-full max-w-5xl mx-auto my-4 md:my-12 bg-primary-background border border-hero-accent rounded-none flex flex-col shadow-[0_0_40px_rgba(166,216,0,0.15)] overflow-hidden"
                 >
                   <div className="w-full flex flex-col relative">
                     <button 
@@ -207,7 +245,7 @@ export default function ProjectsPage() {
                         {/* Left: Image */}
                         <div className="w-full md:w-[45%] shrink-0">
                           {selectedProject.coverImage ? (
-                            <div className="w-full border border-hero-accent relative bg-black">
+                            <div className="w-full border border-hero-accent relative bg-primary-background">
                               <img src={selectedProject.coverImage} alt={selectedProject.title} className="w-full h-auto block opacity-90" />
                             </div>
                           ) : (
@@ -345,9 +383,9 @@ export default function ProjectsPage() {
                       <div className="flex flex-col gap-4">
                         {selectedProject.media.map((mediaUrl, idx) => (
                           mediaUrl.endsWith('.mp4') ? (
-                            <video key={idx} src={mediaUrl} autoPlay loop muted playsInline className="w-full border border-hero-accent/30 bg-[#0a0a0a]" />
+                            <video key={idx} src={mediaUrl} autoPlay loop muted playsInline className="w-full border border-hero-accent/30 bg-primary-background" />
                           ) : (
-                            <img key={idx} src={mediaUrl} alt={`${selectedProject.title} media ${idx + 1}`} className="w-full h-auto object-cover border border-hero-accent/30 bg-[#0a0a0a]" />
+                            <img key={idx} src={mediaUrl} alt={`${selectedProject.title} media ${idx + 1}`} className="w-full h-auto object-cover border border-hero-accent/30 bg-primary-background" />
                           )
                         ))}
                       </div>
@@ -371,7 +409,7 @@ export default function ProjectsPage() {
                     transition={{ delay: 0.4 }}
                     className="flex flex-wrap gap-4 pt-8 border-t border-hero-accent/20"
                   >
-                    <a href={selectedProject.liveUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-6 py-3 bg-hero-accent text-primary-background text-micro-tag hover:bg-[#bbf000] transition-colors border border-hero-accent font-bold uppercase tracking-widest">
+                    <a href={selectedProject.liveUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-6 py-3 bg-hero-accent text-primary-background text-micro-tag hover:opacity-80 transition-opacity border border-hero-accent font-bold uppercase tracking-widest">
                       <ExternalLink size={16} /> View Live Project
                     </a>
                     <a href={selectedProject.githubUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-6 py-3 bg-transparent text-secondary-text border border-hero-accent hover:bg-hero-accent/10 transition-colors text-micro-tag uppercase tracking-widest">

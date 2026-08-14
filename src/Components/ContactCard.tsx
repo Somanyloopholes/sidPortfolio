@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'motion/react';
 import { Mail } from 'lucide-react';
 
@@ -7,6 +7,15 @@ interface ContactCardProps {
 }
 
 export default function ContactCard({ className = "" }: ContactCardProps) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
 
@@ -24,6 +33,7 @@ export default function ContactCard({ className = "" }: ContactCardProps) {
   const glareY = useTransform(smoothY, [0, 1], ["50%", "-50%"]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isMobile) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -32,6 +42,7 @@ export default function ContactCard({ className = "" }: ContactCardProps) {
   };
 
   const handleMouseLeave = () => {
+    if (isMobile) return;
     mouseX.set(0.5);
     mouseY.set(0.5);
   };
@@ -42,12 +53,12 @@ export default function ContactCard({ className = "" }: ContactCardProps) {
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{
-          rotateX,
-          rotateY,
-          transformStyle: "preserve-3d",
+          rotateX: isMobile ? 0 : rotateX,
+          rotateY: isMobile ? 0 : rotateY,
+          transformStyle: isMobile ? "flat" : "preserve-3d",
           willChange: "transform",
         }}
-        className="relative flex flex-col justify-between overflow-hidden rounded-none bg-primary-background p-4 md:p-5 border border-[#333336] shadow-[0_30px_60px_rgba(0,0,0,0.5)] transition-shadow duration-300 hover:shadow-[0_40px_80px_rgba(0,0,0,0.6)]
+        className="relative flex flex-col justify-between overflow-hidden rounded-none bg-primary-background p-4 md:p-5 border border-tertiary-text/30 shadow-[0_30px_60px_rgba(0,0,0,0.5)] transition-shadow duration-300 hover:shadow-[0_40px_80px_rgba(0,0,0,0.6)]
           w-full aspect-[1/1.75] max-w-[min(280px,calc((100vh-200px)/1.75))]
           md:aspect-[1.75/1] md:max-w-[min(640px,calc((100vh-250px)*1.75))]"
       >
@@ -62,20 +73,22 @@ export default function ContactCard({ className = "" }: ContactCardProps) {
         />
 
         {/* Dynamic Glare (Hardware Accelerated) */}
-        <motion.div
-          className="pointer-events-none absolute top-[-50%] left-[-50%] w-[200%] h-[200%] z-10 opacity-70"
-          style={{
-            x: glareX,
-            y: glareY,
-            background: "radial-gradient(circle at center, rgba(255,255,255,0.06) 0%, transparent 50%)",
-            willChange: "transform"
-          }}
-        />
+        {!isMobile && (
+          <motion.div
+            className="pointer-events-none absolute top-[-50%] left-[-50%] w-[200%] h-[200%] z-10 opacity-70"
+            style={{
+              x: glareX,
+              y: glareY,
+              background: "radial-gradient(circle at center, rgba(255,255,255,0.06) 0%, transparent 50%)",
+              willChange: "transform"
+            }}
+          />
+        )}
 
         {/* Center Content */}
         <div
           className="z-20 flex flex-col items-center justify-center absolute inset-0 pointer-events-none"
-          style={{ transform: "translateZ(60px)" }}
+          style={{ transform: isMobile ? "none" : "translateZ(60px)" }}
         >
           <div className="flex flex-col items-center gap-0 -space-y-1 mt-[-2rem] md:mt-0">
             <h2 className="text-section-heading md:text-section-heading text-hero-accent uppercase pointer-events-auto">
@@ -93,7 +106,7 @@ export default function ContactCard({ className = "" }: ContactCardProps) {
         {/* Footer Contacts */}
         <div
           className="z-20 flex flex-col md:flex-row md:items-end md:justify-between gap-4 mt-auto w-full"
-          style={{ transform: "translateZ(50px)" }}
+          style={{ transform: isMobile ? "none" : "translateZ(50px)" }}
         >
           <CopyableField
             icon={<Mail className="w-4 h-4 md:w-5 md:h-5" />}

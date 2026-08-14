@@ -1,6 +1,7 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation, useOutlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
+import { useLenis } from 'lenis/react';
 import './App.css';
 import Navbar from "./Components/Navbar.tsx";
 import Dock from "./Components/Dock.tsx";
@@ -11,9 +12,18 @@ const routeOrder = ['/', '/projects', '/experience', '/contact'];
 function App() {
   const location = useLocation();
   const element = useOutlet();
+  const lenis = useLenis();
   
   const prevLocation = useRef(location.pathname);
   const prevDirection = useRef(1);
+
+  useEffect(() => {
+    if (lenis) {
+      lenis.scrollTo(0, { immediate: true });
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [location.pathname, lenis]);
 
   let direction = prevDirection.current;
   if (location.pathname !== prevLocation.current) {

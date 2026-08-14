@@ -116,13 +116,12 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
           );
         })}
 
-        {/* Animated Tracking Line */}
         <div
           style={{
             top: lineStart + "px",
             height: height + "px",
           }}
-          className="absolute left-1/2 overflow-hidden w-[2px] bg-[linear-gradient(to_bottom,var(--tw-gradient-stops))] from-transparent from-[0%] via-neutral-800 to-transparent to-[99%] -translate-x-1/2 z-10"
+          className="absolute left-1/2 overflow-hidden w-[2px] bg-[linear-gradient(to_bottom,var(--tw-gradient-stops))] from-transparent from-[0%] via-tertiary-text/30 to-transparent to-[99%] -translate-x-1/2 z-10"
         >
           <motion.div
             style={{

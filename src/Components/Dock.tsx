@@ -73,7 +73,11 @@ export default function Dock() {
       >
         {dockRoutes.map((route) => {
           const Icon = route.icon;
-          const isActive = route.internal && location.pathname === route.to;
+          const isActive = route.internal && (
+            location.pathname === route.to || 
+            location.pathname === route.to + '/' || 
+            (route.to !== '/' && location.pathname.startsWith(route.to))
+          );
           
           return (
             <DockItem
