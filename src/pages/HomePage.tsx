@@ -12,10 +12,10 @@ function helloSelecter(): number {
 export default function HomePage(): React.JSX.Element {
   return (
     <section className="flex min-h-[calc(100vh-3.5rem)] md:h-[calc(100vh-3.5rem)] w-full flex-col items-center justify-start pt-0 pb-24 px-12 md:px-32 lg:px-48 xl:px-64 max-w-7xl mx-auto">
-      <div className="w-full grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 h-auto md:h-full flex-grow">
+      <div className="w-full flex flex-col md:flex-row gap-y-6 md:gap-y-0 md:gap-x-4 h-auto md:h-full flex-grow">
 
         {/* Left Column */}
-        <div className="flex flex-col gap-4 md:gap-6 h-auto md:h-full min-h-0">
+        <div className="flex-1 flex flex-col gap-y-6 h-auto md:h-full min-h-0">
 
           {/* Greeting Box */}
           <div className="border border-hero-accent bg-primary-background px-3 py-1 md:p-6 flex items-center shrink-0">
@@ -36,8 +36,7 @@ export default function HomePage(): React.JSX.Element {
         </div>
 
         {/* Right Column (Video/Animation) */}
-        <div className="border border-hero-accent h-[350px] md:h-full relative overflow-hidden bg-primary-background flex justify-center p-2 md:p-0">
-
+        <div className="shrink-0 h-[350px] md:h-full relative flex justify-center overflow-hidden bg-primary-background">
           <video
             autoPlay
             loop
@@ -45,11 +44,13 @@ export default function HomePage(): React.JSX.Element {
             playsInline
             controlsList="nodownload"
             onContextMenu={(e) => e.preventDefault()}
-            className="w-full h-full block object-contain pointer-events-none"
+            className="w-auto h-full block object-contain pointer-events-none"
           >
             <source src={landingPageVidBase64} type="video/mp4" />
           </video>
 
+          {/* Border perfectly wrapping the scaled video */}
+          <div className="absolute inset-0 border border-hero-accent pointer-events-none" />
 
           {/* Scanline/Dot overlay to hide video pixelation/compression artifacts */}
           <div className="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(#000000_1px,transparent_1px)] [background-size:4px_4px]" />

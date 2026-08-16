@@ -34,6 +34,7 @@ export interface Project {
   media: string[];            // full case study — gallery images/screenshots
   githubUrl?: string;
   liveUrl?: string;
+  figmaUrl?: string;
 }
 
 export const skillsList = [
@@ -85,7 +86,7 @@ export const projects: Project[] = [
     id: "sidportfolio-engineering",
     title: "Portfolio - Engineering the interface",
     shortDescription:
-      "A React 19 / TypeScript SPA with physics-based motion, a scroll-driven timeline, and a markdown-powered case-study system.",
+      "A React, TypeScript SPA with physics-based motion, a scroll-driven timeline, and a markdown-powered case-study system.",
     coverImage: "/portfolioEngineeringCover.png",
     skills: [
       "React",
@@ -93,45 +94,47 @@ export const projects: Project[] = [
       "Tailwind",
       "Vite"
     ],
-    role:
-      "Solo developer — architecture, component design, animation systems, and build tooling.",
+    role: "Solo developer: architecture, component design, animation systems, and build tooling.",
 
-    problemStatement: `Most portfolio SPAs either ship a handful of static pages or bolt animation on top as an afterthought, which tends to show up as jank on scroll, inconsistent transition timing, or a data model that can't hold a real case study without breaking. I wanted a single codebase that could support a growing set of detailed, markdown-rendered case studies, animated page-to-page navigation that reads as intentional rather than decorative, and a component layer strict enough in TypeScript that adding new sections wouldn't quietly introduce bugs.`,
+    problemStatement: `
+![Portfolio screenshot](/screenshots/portfolioEngineer1.png)
 
-    architecture: `**Shell:** \`main.tsx\` sets up the router (\`createBrowserRouter\`, four nested routes) and wraps the app in \`ReactLenis\` for smooth scrolling. \`App.tsx\` owns the layout shell — background pattern, nav, the animated outlet, and the dock — and is the single place that knows about page order.
- 
-    **Routing & transitions:** \`App.tsx\` keeps a \`routeOrder\` array and a \`prevLocation\` ref. On every navigation it diffs the new route's index against the previous one to decide slide direction, then hands that direction to \`AnimatePresence\` (\`mode="popLayout"\`) via a custom prop. This is a small, self-contained piece of logic rather than a transition library, which kept it predictable and easy to reason about when adding new pages.
-    
-    **Content layer:** Project and case-study data lives in a typed \`data/projects.ts\` file, not a CMS or API — the site is fully static by design. The projects page filters that array client-side against active skill tags, and the case-study modal renders each project's markdown fields through \`react-markdown\` with a custom component map for styled paragraphs, links, images, and lists.
-    
-    **Motion primitives:** The contact card and the timeline both build directly on Framer Motion's lower-level hooks (\`useMotionValue\`, \`useSpring\`, \`useTransform\`) rather than its default animation presets, which is what makes the tilt and scroll-tracking feel physical instead of eased.`,
+Most portfolio sites either ship a handful of static pages or bolt animation on top as an afterthought, and that usually shows up as jank on scroll, inconsistent transition timing, or a data model that can't hold a real case study without breaking. I wanted one codebase that could support a growing set of detailed, markdown-rendered case studies, page-to-page navigation that reads as intentional rather than decorative, and a component layer strict enough in TypeScript that adding new sections wouldn't quietly introduce bugs.`,
 
-    methodology: `I built the routing and transition shell first, before any real page content existed, because getting slide direction and mount/unmount timing right is the kind of thing that's painful to retrofit once pages have their own internal state. Everything after that was built and reviewed one section at a time — dock, contact card, timeline, project grid — rather than standing up whole pages at once, which made it easier to catch layout regressions early.
-    
-    For styling, I chose Tailwind CSS v4 specifically for its native support of CSS custom properties, since the site's color and spacing values needed to live as real design tokens rather than one-off utility values scattered through components. For animation, Framer Motion's hook-based API won out over CSS transitions because several interactions — the card tilt, the timeline's scroll-linked line — need continuous, physically-plausible values rather than discrete state-to-state transitions.
-    
-    TypeScript is configured in strict mode with \`noUnusedLocals\`, \`noUnusedParameters\`, and \`noFallthroughCasesInSwitch\` all enabled, which I kept on deliberately through the build rather than relaxing it to move faster — the case-study data model in particular has enough optional fields that loose typing would have made rendering bugs easy to miss.`,
+    architecture: `**Shell:** \`main.tsx\` is the entry point. It sets up the router (four nested routes, so \`/projects\`, \`/experience\`, and \`/contact\` are all real URLs rather than one page faking navigation) and wraps the whole app in \`ReactLenis\`, a library that smooths out scroll so it eases instead of jumping in raw pixel steps. \`App.tsx\` owns everything visible around the actual page content: the background pattern, the nav bar, the dock at the bottom, and the animated area where pages swap in and out. It's the one place in the codebase that knows what order the pages come in, which matters for the next part.
+
+**Routing and transitions:** Every time you navigate, the app needs to decide whether the new page should slide in from the left or the right, and that decision has to feel consistent no matter which two pages you're moving between. \`App.tsx\` keeps a \`routeOrder\` array (just the pages in their intended left-to-right order) and a ref that remembers the last page you were on. On every navigation it compares the new page's position in that array against the old one, and that comparison becomes a direction: left or right. That direction gets handed off to \`AnimatePresence\`, a Framer Motion component whose job is to let a page finish animating out before the next one mounts, so you never get a jarring cut. I'm using it in \`popLayout\` mode specifically, which means the outgoing and incoming pages don't fight each other for layout space while both are briefly on screen. I wrote this direction logic by hand instead of reaching for a page-transition library, since the actual computation is small and having full control over it made the timing easier to get right.
+
+**Content layer:** All the project and case-study data lives in one typed file, \`data/projects.ts\`, not a CMS or an API. The site is fully static by design, so the projects page just filters that array in the browser against whichever skill tags are active, and the case-study modal renders each project's text fields through \`react-markdown\`, a library that turns markdown syntax into actual styled HTML, with a custom set of components so paragraphs, links, images, and lists all match the site's type system instead of looking like default browser markdown.
+
+**Motion primitives:** The contact card and the timeline both skip Framer Motion's built-in animation presets and build directly on its lower-level hooks instead: \`useMotionValue\` (a value that can update every frame without triggering a React re-render), \`useSpring\` (which smooths a value's changes so it eases like a physical spring instead of snapping), and \`useTransform\` (which maps one animated value onto another, like turning mouse position into a rotation angle). That's the difference between the card tilt and the timeline's scroll tracking feeling like they're actually responding to you in real time, versus just playing a canned animation.`,
+
+    methodology: `I built the routing and transition shell before any real page content existed, since getting slide direction and mount and unmount timing right is the kind of thing that's painful to fix later once pages have their own internal state to worry about. Everything after that got built and reviewed one section at a time: dock, contact card, timeline, project grid, rather than standing up whole pages at once. That made it a lot easier to catch layout regressions while they were still small.
+
+For styling, I picked Tailwind CSS v4 specifically because it has native support for CSS custom properties, since the site's colors and spacing needed to live as real design tokens rather than one-off values scattered across components. For animation, Framer Motion's hook-based API won out over plain CSS transitions because a few interactions, the card tilt and the timeline's scroll-linked line especially, need continuous values that update every frame rather than jumping between a few fixed states.
+
+TypeScript is configured in strict mode, with \`noUnusedLocals\`, \`noUnusedParameters\`, and \`noFallthroughCasesInSwitch\` all turned on. I kept that on through the whole build instead of loosening it to move faster. The case-study data model in particular has enough optional fields that loose typing would have let rendering bugs slip through unnoticed.`,
 
     challenges: [
       {
         title: "Directional transitions without a transition library",
         description:
-          "Rather than pull in a page-transition package, I wrote the routeOrder-diffing logic by hand in App.tsx so I could control exactly how direction is computed and keep the dependency footprint down. The tradeoff is that adding a new top-level page means remembering to register it in the order array — a deliberate, documented constraint rather than a hidden one.",
+          "Rather than pull in a page-transition package, I wrote the `routeOrder` comparison by hand in `App.tsx` so I could control exactly how direction gets computed and keep the dependency count down. The tradeoff is that adding a new top-level page means remembering to register it in that order array too. It's a real constraint, but a documented one rather than a hidden trap.",
       },
       {
         title: "Height tracking for the scroll-driven timeline",
         description:
-          "The timeline component started from an open-source layout primitive, but its default height calculation didn't hold up against this site's content, which resizes based on variable-length entries. I rewrote the height logic using ResizeObserver against the first and last icon refs, plus a custom getOffsetTop helper that walks the offsetParent chain so the calculation stays correct even when a parent has a CSS transform applied — the default offsetTop approach breaks under transforms, which the page transitions rely on.",
+          "The timeline component started from an open-source layout primitive, but its default height calculation didn't hold up against this site's content, since entries here can vary a lot in length. I rewrote the height logic using `ResizeObserver` (a browser API that watches an element and fires whenever its size changes) against the first and last icon on the timeline, plus a custom helper that walks up the chain of offset parents by hand. The default approach for measuring an element's position breaks once a parent has a CSS transform applied to it, which is exactly the situation the page transitions create, so I had to work around that directly.",
       },
       {
         title: "3D tilt without a 3D library",
         description:
-          "The business card's perspective tilt and glare are done entirely with CSS transforms driven by Framer Motion's motion values — no three.js or WebGL. That kept the bundle lean, but meant hand-tuning the spring config and translateZ layering to get the parallax to read as physical rather than just tilted.",
+          "The business card's tilt and glare are done entirely with CSS transforms driven by Framer Motion's motion values, no three.js or WebGL involved. That kept the bundle small, but it meant hand-tuning the spring settings and the depth layering myself to get the parallax to actually read as physical instead of just tilted.",
       },
       {
         title: "A flexible but type-safe case-study data model",
         description:
-          "Case studies vary in how much detail they have — some fields are fully populated, others are still placeholders. Modeling that with a mix of required and optional TypeScript fields, while keeping the modal's rendering logic simple, took a few passes before the interface struck the right balance between flexibility and actually catching missing-data bugs at compile time.",
+          "Case studies vary a lot in how much detail they have. Some fields are fully written out, others are still placeholders. Modeling that with a mix of required and optional TypeScript fields, while keeping the modal's rendering logic simple, took a few passes before the interface struck the right balance between staying flexible and actually catching missing-data bugs at compile time instead of at runtime.",
       },
     ],
 
@@ -151,7 +154,7 @@ export const projects: Project[] = [
         name: "Lenis",
         category: "Scroll",
         version: "1.3.25",
-        note: "drives the scroll-linked timeline animation",
+        note: "Lenis smooth scroll",
       },
       { name: "react-markdown", category: "Content Rendering", version: "10.1.0" },
       { name: "shadcn/ui", category: "Component Primitives", version: "4.13.0" },
@@ -176,7 +179,7 @@ export const projects: Project[] = [
       },
     ],
 
-    impactsAndKeyTakeaways: `Building the transition and data layers first, before content, paid off — every new page and case study since has slotted into an existing structure instead of needing its own one-off logic. The biggest engineering lesson was around motion: reaching for Framer Motion's raw hooks instead of its animation presets took more upfront tuning but gave far more control over how the tilt, scroll-tracking, and dock magnification actually feel, which matters more on a portfolio than almost anywhere else. I'd make the same tradeoff again — hand-write the pieces that need to feel exact, and only reach for a library when the problem is genuinely generic.`,
+    impactsAndKeyTakeaways: `Building the transition and data layers first, before any content existed, paid off. Every new page and case study since has slotted into a structure that was already there instead of needing its own one-off logic. The biggest lesson was around motion specifically: reaching for Framer Motion's raw hooks instead of its animation presets took more upfront tuning, but it gave a lot more control over how the tilt, the scroll tracking, and the dock magnification actually feel, and that matters more on a portfolio than almost anywhere else. I'd make the same tradeoff again: hand-write the pieces that need to feel exact, and only reach for a library when the problem is genuinely generic.`,
 
     media: [
       // TODO: screenshots/gifs — dock magnification, contact card tilt, timeline scroll, case-study modal
@@ -193,51 +196,49 @@ export const projects: Project[] = [
     coverImage: "/portfolioDesignCover.png",
     skills: [
       "Figma",
-      "Design Systems",
       "UI/UX",
       "Figma MCP"
     ],
-    role:
-      "Solo designer — visual identity, token architecture, and the Figma-to-code handoff structure.",
+    role: "Solo designer: visual identity, token architecture, and the Figma-to-code handoff structure.",
 
-    problemStatement: `Most portfolio sites default to the same palette — near-black background, a blue accent, done. I wanted something that read as a deliberate identity rather than a default, without tipping into the kind of maximalism that stops being legible. The harder version of that problem: the system couldn't just work on one page. It needed to survive being pulled onto a LinkedIn banner, rendered inside a GitHub README in both light and dark themes, and even reproduced on hardware — my Windows accent color and keyboard RGB are both set to match it now. A system that only works on one background isn't really a system.`,
+    problemStatement: `Most portfolio sites default to the same palette: near-black background, a blue accent, done. I wanted something that read as a deliberate identity instead of a default, without tipping into the kind of maximalism that stops being legible. The harder version of the problem was that the system couldn't just work on one page. It needed to survive being pulled onto a LinkedIn banner, rendered inside a GitHub README in both light and dark themes, and even reproduced on actual hardware (my Windows accent color and my keyboard RGB are both set to match it now). A system that only works on one background isn't really a system.`,
 
-    architecture: `**Color:** Five Figma variables, flat and kebab-cased — \`primary-bg\` (#131314), \`secondary-text\` (#F4F4F5), \`tertiary-text\` (#A1A1AA), \`hero-accent\` (#A6D800), and \`surface-dock\` (a 15% tint of the background used specifically for the dock's glass-like surface). Four neutrals and exactly one accent — the constraint is the point.
- 
-**Type:** A role-based scale, not a size-based one — styles are named for what they do (\`display-hero\`, \`section-heading\`, \`sub-heading\`, \`title-small\`, \`body-prose\`, \`body-emphasis\`, \`micro-tag\`, \`statement-mono\`) rather than their pixel value, with a parallel mobile scale that recalculates line-height and size per style rather than just scaling everything down uniformly.
- 
-**Layout:** Every frame in the Figma file is built with auto-layout — spacing and sizing are encoded as structure inside the file itself, not eyeballed and left implicit. That structure is what actually crosses over into code: it's the difference between a design file that documents intent and one that only shows a result.
- 
-**Handoff:** Figma → Figma MCP → Antigravity. The MCP server exposes the variables, styles, and auto-layout structure as context Antigravity can read directly, rather than requiring the design system to be redescribed in a prompt. The free tier caps out at 6 tool calls a month, which rules out using it as a continuous sync — so the workflow treats it as a one-time extraction: pull the full variable and style set once, capture it directly into \`index.css\` as Tailwind CSS v4 custom properties, and treat that file as the canonical source from then on, going back to MCP only when the token set itself actually changes.`,
+    architecture: `**Color:** Five Figma variables, which are named color values you define once and reuse everywhere instead of retyping a hex code on every element. They're kebab-cased (hyphenated, like \`primary-bg\`) so multi-word names stay readable: \`primary-bg\` (#131314), \`secondary-text\` (#F4F4F5), \`tertiary-text\` (#A1A1AA), \`hero-accent\` (#A6D800), and \`surface-dock\`, a 15% tint of the background used specifically for the dock's glass-like surface. Four neutrals and exactly one accent color. That restraint is the actual design decision, not a limitation.
 
-    methodology: `I settled on the color scheme before I built a single token — the five-variable, one-accent structure came after the decision, not before it. That ordering mattered: it meant the system was built to express a choice I'd already made, rather than being assembled first and colored in after.
- 
-The palette itself is a reaction against the usual portfolio defaults. I wanted a strict monotone base with exactly one accent doing all the work, in the spirit of how accessible color-pairing tools like randoma11y treat contrast — deliberately, not decoratively — combined with a willingness to let that one accent be loud, which is closer to what I took from Bungie's *Marathon* art direction: vibrant, graphic, unapologetic about being the focal point of every frame it appears in. The system is quiet everywhere except the one place it isn't.
- 
-Typography followed the same logic. Geist Mono carries the bold display moments — the same instinct Palantir uses a heavy, technical-feeling font for its hero type — while Inter handles body copy where actual readability matters more than character, and JetBrains Mono is reserved for anything meant to read as code or a system statement.
- 
-The first real pass at the visual direction wasn't this one. I built it out in glassmorphism first, got far enough to actually look at it, and realized it read as generic — a style everyone's portfolio was already doing rather than a specific choice. I killed that direction and rebuilt around the current graphic-and-typography-led system instead of trying to salvage it.`,
+**Type:** A role-based scale instead of a size-based one, meaning each style is named for what it does (\`display-hero\`, \`section-heading\`, \`sub-heading\`, \`title-small\`, \`body-prose\`, \`body-emphasis\`, \`micro-tag\`, \`statement-mono\`) rather than its pixel value. There's a parallel mobile scale too, and it recalculates line height and size per style rather than just shrinking everything down by the same percentage.
+
+**Layout:** Every frame in the Figma file uses auto layout, Figma's system for defining spacing and sizing as real structure rather than elements placed by eye. That structure is what actually survives the handoff into code. A design file that only shows a finished result forces a developer to guess at the spacing, one built with auto layout documents the intent directly.
+
+**Handoff:** The path from design to code runs Figma to Figma MCP to Antigravity. Figma MCP is a bridge that lets an outside tool read a Figma file's variables, styles, and layout structure directly, instead of a developer manually describing the design in a prompt. Antigravity is the tool on the other end that turns that structure into actual code. The free tier of Figma MCP only allows 6 tool calls a month, which rules it out as something you'd query continuously while designing. So I built the workflow around that limit instead of fighting it: pull the full variable and style set once, save it directly into the site's CSS as reusable style variables, and treat that file as the source of truth from then on. I only go back to Figma MCP when the token set itself actually changes.`,
+
+    methodology: `I settled on the color scheme before I built a single token. The five-variable, one-accent structure came after that decision, not before it. That ordering mattered, since it meant the system was built to express a choice I'd already made, instead of being assembled first and colored in afterward.
+
+The palette itself pushes back against the usual portfolio defaults. I wanted a strict monotone base with exactly one accent doing all the work, in the spirit of how accessible color-pairing tools like randoma11y treat contrast: deliberately, not decoratively. I paired that with a willingness to let the one accent actually be loud, which is closer to what I took from Bungie's *Marathon* art direction, vibrant, graphic, and unapologetic about being the focal point of every frame it shows up in. The result is a system that's quiet everywhere except the one place it isn't.
+
+Typography followed the same logic. Geist Mono carries the bold display moments, the same instinct behind Palantir using a heavy, technical-feeling font for its hero type. Inter handles body copy, where actual readability matters more than character. JetBrains Mono is reserved for anything meant to read as code or a system statement.
+
+This wasn't my first real pass at the visual direction, either. I built the site out in glassmorphism first and got far enough to actually sit with it before realizing it read as generic, a style every other portfolio was already doing rather than a specific choice of my own. I killed that direction and rebuilt around the current graphic, typography-led system instead of trying to salvage what I had.`,
 
     challenges: [
       {
         title: "Reconciling loud and quiet influences",
         description:
-          "Marathon's art direction and an accessibility-first color tool pull in opposite directions — one wants maximum visual energy, the other wants restraint and legibility above all else. I resolved it by scoping where each one gets to win: the accent color is allowed to be loud because it's the only color in the system, and everything else — the four neutrals, the type scale, the grid — stays disciplined so the one loud decision actually reads as a decision instead of noise.",
+          "Marathon's art direction and an accessibility-first color tool pull in opposite directions. One wants maximum visual energy, the other wants restraint and legibility above everything else. I resolved it by scoping where each one gets to win. The accent color is allowed to be loud because it's the only color in the system, while everything else, the four neutrals, the type scale, the grid, stays disciplined enough that the one loud decision actually reads as a decision instead of noise.",
       },
       {
         title: "Killing the glassmorphism direction",
         description:
-          "I had a working glassmorphism pass before this system existed. It looked fine and it also looked like every other portfolio site right now. Recognizing that and rebuilding from a different starting point was a bigger factor in how the site turned out than any individual visual refinement inside either direction.",
+          "I had a working glassmorphism pass before this system existed. It looked fine, and it also looked like every other portfolio site right now. Recognizing that and starting over from a different point mattered more to how the site turned out than any individual visual refinement inside either direction would have.",
       },
       {
         title: "Working around the Figma MCP free-tier cap",
         description:
-          "A 6-tool-call-per-month cap makes it impossible to treat Figma MCP as a live design source you query on demand. I restructured the workflow around that constraint instead of working against it — one deliberate full export, captured into index.css, treated as canonical until the token set itself changes.",
+          "A 6-tool-call-per-month cap makes it impossible to treat Figma MCP as something you query on demand while designing. I restructured the workflow around that limit instead of working against it: one deliberate full export, saved into the site's CSS, treated as canonical until the token set itself actually changes.",
       },
       {
         title: "Making one identity hold across four different surfaces",
         description:
-          "The same five-token, one-accent system has to read correctly on the site itself (interactive, full control over background), a LinkedIn banner (fixed aspect ratio, sitting in a feed next to everything else), a GitHub README (rendered in both GitHub's light and dark themes, outside my control), and physical hardware (Windows accent color and keyboard RGB, with far less color accuracy than a browser gives you). Keeping the system simple — one accent, four neutrals — was what made it portable across constraints that different in the first place.",
+          "The same five-token, one-accent system has to read correctly across four very different places: the site itself, where I have full control over the background; a LinkedIn banner, locked to a fixed aspect ratio and sitting in a feed next to everything else; a GitHub README, rendered in both GitHub's light and dark themes, outside my control; and physical hardware, my Windows accent color and keyboard RGB, with far less color accuracy than a browser gives you. Keeping the system simple, one accent, four neutrals, was what made it portable across constraints that were this different from each other in the first place.",
       },
     ],
 
@@ -258,67 +259,58 @@ The first real pass at the visual direction wasn't this one. I built it out in g
       { name: "Geist Mono / Inter / JetBrains Mono", category: "Typography" },
     ],
 
-    keyResults: [
-      {
-        label: "Color tokens",
-        value: "5",
-        note: "primary-bg, secondary-text, tertiary-text, hero-accent, surface-dock — one accent, rest neutral",
-      },
-      {
-        label: "Type styles",
-        value: "8 desktop / 6+ mobile",
-        note: "named by role (display-hero through micro-tag), not by pixel size",
-      },
-      {
-        label: "Brand surfaces",
-        value: "4",
-        note: "site, LinkedIn banner, GitHub README, OS accent color + keyboard RGB",
-      },
-      {
-        label: "Figma MCP usage",
-        value: "1 full export",
-        note: "captured into index.css once due to the 6-call/month free-tier cap; re-run only on deliberate token changes",
-      },
-    ],
-
-    impactsAndKeyTakeaways: `Designing for four surfaces instead of one forced a kind of discipline that designing for a single page never would have — a system that only survives on one background isn't a system, it's a page. The decision that mattered most wasn't any single color or font choice; it was killing the glassmorphism direction early instead of polishing something that was fundamentally the wrong starting point. And on the handoff side, the clearest lesson was that Antigravity could only rebuild what the Figma file made legible — named variables, auto-layout structure, and a genuinely small token set did more for the Figma-to-code pipeline than any amount of prompting would have.`,
+    impactsAndKeyTakeaways: `Designing for four surfaces instead of one forced a kind of discipline that designing for a single page never would have. A system that only survives on one background isn't really a system, it's just a page. The decision that mattered most wasn't any single color or font choice. It was killing the glassmorphism direction early instead of polishing something that was fundamentally the wrong starting point. On the handoff side, the clearest lesson was that Antigravity could only rebuild what the Figma file actually made legible. Named variables, auto layout structure, and a genuinely small token set did more for the Figma-to-code pipeline than any amount of prompting would have.`,
 
     media: [
       // TODO: Figma variables panel, typography scale panel, project-page mockup, before/after glassmorphism comparison
     ],
 
-    githubUrl: "https://github.com/Somanyloopholes/sidPortfolio",
-    // liveUrl: "" // not yet deployed
+    figmaUrl: "https://www.figma.com/design/6SdfRR2rv8q3cSsxJH8GHT/PortfolioWebsiteDesignDoc?node-id=1-3&t=dCFCO7OKrv6OcYA8-1",
   },
   {
     id: "signpose-vr",
     title: "SignPoseVR — Learn ASL in VR",
     shortDescription:
-      "A controller-free VR app for learning the ASL alphabet and digits on Meta Quest, with real-time hand-tracking feedback.",
+      "A controller-free VR app for learning ASL alphabets and digits on Meta Quest, with real-time hand-tracking feedback.",
     coverImage: "/SignPoseCover.png",
     skills: ["C#", "Unity", "VR", "Meta XR SDK", "Unity XR SDK", "Open XR"],
-    role: "Solo project — designed, built, and published the full application to the Meta Horizon Store.",
+    role: "Solo project: designed, built, and published the full application to the Meta Horizon Store.",
     problemStatement:
-      "Learning the ASL alphabet and numbers usually means a 2D app or a YouTube tutorial — something that can show you the correct hand shape but has no way of telling you whether the shape you're actually making matches it. That gap is what I wanted to fix. Quest's hand tracking meant I could skip controllers entirely and let someone practice with their actual hands, getting feedback the moment they get a sign right instead of guessing.",
+      `
+![InGame screenshot](/screenshots/signPoseVR1.png)
+
+Learning the ASL alphabet and numbers usually means a 2D app or a YouTube tutorial. Both can show you the correct hand shape, but neither can tell you whether the shape you're actually making matches it. That's the gap I wanted to close. Quest's hand tracking let me skip controllers entirely and have someone practice with their actual hands, getting feedback the moment they get a sign right instead of just guessing and moving on.`,
     architecture:
-      "Under the hood, the app runs on OpenXR as the active runtime, with Meta XR SDK layered on top providing hand tracking as an OpenXR extension — the Oculus XR Plugin ships in the package via com.meta.xr.sdk.all but isn't the active loader.\n\nOn top of that stack, the app runs on a 3-tier ScriptableObject structure. At the bottom, each of the 36 signs (A–Z, 0–9) is its own Hand Shape asset — per-finger curl and spread conditions with tolerance ranges, so a real hand doesn't have to hit the shape pixel-perfect. Those wrap into PoseWithImage assets, pairing a hand shape with its reference image and description, and all 36 live inside one PoseLibrary asset the rest of the app indexes into.\n\nAt runtime, LearnModeController pulls a random pose from the library and hands it to DynamicGestureController, which is where the actual trick lives: StaticHandGesture, Meta XR SDK's gesture-evaluation component, only checks one hardcoded pose, set in the editor, with no public way to change it at runtime. I used C# reflection to reach into the component's private fields (m_HandShapeOrPose, m_HandPose) and re-invoke its own OnEnable/Initialize methods, effectively hot-swapping which sign a single evaluator is checking for. That let me cycle through all 36 signs off one reusable gesture component instead of instantiating and destroying 36 of them every round.\n\nFrom there it's event-driven: the SDK fires gesturePerformed/gestureEnded against the tracked hand, DynamicGestureController counts how many finger conditions are currently satisfied, and once a match holds steady for 0.8 seconds it fires a PoseMatched event — border materials swap to a glow finish, score bumps in Quiz mode, and LearnModeController pulls the next random pose, with a do-while check so the same sign never repeats twice in a row.",
+      `**Runtime:** The app sits on top of OpenXR, which is the runtime actually doing the hand tracking underneath everything. Meta XR SDK sits one layer above that, exposing hand tracking as an OpenXR extension rather than replacing it (the Oculus XR Plugin is bundled in the package too, but it's not the active loader, just leftover baggage from the SDK install).
+
+**Data layer:** Above that runtime, the app's content is organized as three layers of data, each one built on the layer below it. A \`Hand Shape\` asset is the bottom layer: one per sign, 36 total, storing per-finger curl and spread conditions with tolerance ranges, so a real hand doesn't have to match the shape pixel-perfectly. A \`PoseWithImage\` asset wraps one hand shape together with its reference image and text description, basically one flashcard. A single \`PoseLibrary\` asset holds all 36 of those flashcards in one array the rest of the app reads from. Because everything here is data rather than code, adding a 37th sign later would just mean creating new assets, no scripts to touch.
+
+**Gameplay loop:** Two controllers run the actual gameplay. \`LearnModeController\` is the higher-level one: it picks a random flashcard from the library, keeps score in Quiz mode, and makes sure the same sign never repeats twice in a row. \`DynamicGestureController\` does the harder job of actually checking whether your hand matches the sign on screen, and it's where the interesting engineering problem lives.
+
+**The reflection trick:** Meta XR SDK ships a component called \`StaticHandGesture\` that checks a hand against one specific pose, set once in the Unity editor with no way to change it while the app is running. That's fine for two or three fixed gestures wired up by hand, but it doesn't scale to 36 signs that all need to swap in and out as the user cycles through them. Rather than build 36 separate copies of that component, I used C# reflection to reach into its private fields (\`m_HandShapeOrPose\`, \`m_HandPose\`) and re-run its own internal setup methods (\`OnEnable\`, \`Initialize\`), which lets me swap which pose a single evaluator is checking for at runtime. One reusable component ends up doing the job of 36.
+
+**Putting it together:** From there the loop is event-driven. The SDK fires events when a gesture starts and stops matching, \`DynamicGestureController\` counts how many of the five finger conditions are currently satisfied, and once a match holds steady for 0.8 seconds straight, it fires its own \`PoseMatched\` event. That triggers the visual payoff (the border cubes around the hand swap to a glowing material), bumps the score if you're in Quiz mode, and hands control back to \`LearnModeController\` to pick the next sign.`,
     methodology:
-      "I built this sign by sign rather than trying to solve gesture recognition in the abstract. Each hand shape started as a rough tolerance range and got tightened over repeated rounds of putting the headset on, making the sign myself, and adjusting curl/spread thresholds per finger until it stopped triggering on close-but-wrong shapes and stopped missing correct ones. Signs like P, G, and H needed an extra orientation condition on top of finger shape, since they're distinguished by palm direction more than by which fingers are curled.\n\nI ran a small round of informal testing — 4 to 5 people trying it cold — mostly to catch tolerance settings that felt fine to me, since I'd been making these signs myself for weeks, but were too strict or too loose for someone unfamiliar with the exact hand position.\n\nI also built a custom Unity editor for the PoseSelectorRuntime component early on, because manually wiring up 36 pose references through the default inspector was slow enough that I was making mistakes. A dropdown populated from the pose library made authoring and testing each sign much faster.",
+      `I built this sign by sign instead of trying to solve gesture recognition as one big abstract problem. Each hand shape started as a rough tolerance range, and I tightened it over repeated rounds of putting the headset on, making the sign myself, and adjusting the curl and spread thresholds per finger until it stopped triggering on close-but-wrong shapes and stopped missing correct ones. Signs like P, G, and H needed an extra condition on top of finger shape, since what actually distinguishes them is which way the palm is facing, not just which fingers are curled.
+
+I also ran a small, informal round of testing: 4 to 5 people trying the app cold. The main thing I was checking for was tolerance settings that felt fine to me (since I'd been making these signs myself for weeks) but were actually too strict or too loose for someone seeing the correct hand position for the first time.
+
+Early on I also built a custom Unity editor for \`PoseSelectorRuntime\`, the component responsible for picking which pose asset a given scene object represents. Wiring up all 36 pose references by hand through Unity's default inspector was slow enough that I kept making mistakes, so I replaced it with a dropdown populated straight from the pose library, which made authoring and testing each sign a lot faster.`,
     challenges: [
       {
         title: "Choosing the right layer of the Meta stack for gesture matching",
         description:
-          "My first pass used Meta XR SDK's higher-level, out-of-the-box gesture tooling — it gets you gesture detection fast, but it's built around wiring up a handful of predefined gestures by hand in the Inspector, not scaling to three dozen distinct signs. Rather than switch runtimes, I dropped down a layer: StaticHandGesture is a lower-level Meta XR SDK component, still running on the same OpenXR-backed hand tracking, that just evaluates a single hardcoded pose. I gave up the convenience of the higher-level tool in exchange for a component I could manipulate directly — which is what led to the reflection-based pose injection described in the architecture above."
+          "My first pass used Meta XR SDK's higher-level, out-of-the-box gesture tooling. It gets you gesture detection running fast, but it's built around wiring up a handful of predefined gestures by hand in the Inspector, not scaling to three dozen distinct signs. Rather than switch runtimes entirely, I dropped down a layer: `StaticHandGesture` is a lower-level Meta XR SDK component, still running on the same OpenXR-backed hand tracking, that evaluates a single hardcoded pose. I gave up the convenience of the higher-level tool in exchange for a component I could manipulate directly, which is what led to the reflection-based pose injection described above."
       },
       {
         title: "Real-time hand tracking without controllers",
         description:
-          "Meta's hand tracking is good but noisy — a hand passing briefly through the correct shape on its way to a different pose could register as a false match. The fix was the 0.8-second hold timer: a match only counts once the gesture is sustained, and the coroutine cancels immediately if it's lost mid-hold. That one change did more for reliability than any amount of finger-tolerance tuning."
+          "Meta's hand tracking is good but noisy. A hand passing briefly through the correct shape on its way to a different pose could register as a false match. The fix was the 0.8 second hold timer: a match only counts once the gesture is sustained, and the coroutine cancels immediately if it's lost mid-hold. That one change did more for reliability than any amount of finger-tolerance tuning."
       },
       {
         title: "Gesture recognition across natural variation",
         description:
-          "No two people hold their hand exactly the same way for a given sign, and Quest's tracking has its own jitter on top of that. Each hand shape defines per-finger curl and spread with upper and lower tolerance bounds instead of one target value, and a few signs needed an added palm-orientation check since they're differentiated by rotation as much as finger position. Getting these tolerance bands loose enough to accept real variation but tight enough to reject a different letter took more iteration than anything else in the project."
+          "No two people hold their hand exactly the same way for a given sign, and Quest's tracking has its own jitter on top of that. Each hand shape defines per-finger curl and spread with upper and lower tolerance bounds instead of a single target value, and a few signs needed an added palm-orientation check since they're differentiated by rotation as much as finger position. Getting these tolerance bands loose enough to accept real variation, but tight enough to reject a different letter, took more iteration than anything else in the project."
       },
       {
         title: "VR interaction design without a controller pointer",
@@ -328,7 +320,7 @@ The first real pass at the visual direction wasn't this one. I built it out in g
       {
         title: "Keeping standalone Quest hardware smooth",
         description:
-          "Quest runs on mobile-class chips, so anything I'd take for granted on desktop VR — real-time lighting, uncapped draw calls — was a performance risk. I baked lighting into lightmaps ahead of time instead of computing it live, built on Universal Render Pipeline for its lighter overhead, and kept the classroom scene simple. The app holds a steady 60fps on Quest hardware as a result."
+          "Quest runs on mobile-class chips, so anything I'd take for granted on desktop VR (real-time lighting, uncapped draw calls) was a performance risk. I baked lighting into lightmaps ahead of time instead of computing it live, built on Universal Render Pipeline for its lighter overhead, and kept the classroom scene simple. The app holds a steady 60fps on Quest hardware as a result."
       }
     ],
     techStack: [
@@ -351,14 +343,9 @@ The first real pass at the visual direction wasn't this one. I built it out in g
       { label: "Gesture Accuracy", value: "~90%", note: "informal estimate, not formally benchmarked" }
     ],
     impactsAndKeyTakeaways:
-      "The reflection-based pose injection was the biggest technical risk in the project: it depends on private SDK internals that aren't part of Meta's public API, so an SDK update could break it without warning. It worked for this build, but it's a trade-off worth naming rather than glossing over. On accessibility, controller-free hand tracking lowers one barrier to entry, but the app has no colorblind-friendly alternative to the glow feedback, no audio cues, and English-only text — the clearest next steps if I picked this back up.",
+      "The reflection-based pose injection was the biggest technical risk in the project. It depends on private SDK internals that aren't part of Meta's public API, so an SDK update could break it without warning. It worked for this build, but it's a trade-off worth naming rather than glossing over. On accessibility, controller-free hand tracking lowers one barrier to entry, but the app still has no colorblind-friendly alternative to the glow feedback, no audio cues, and only English text. Those would be the clearest next steps if I picked this back up.",
     media: [
-      "/images/signpose/cover.png",
-      "/images/signpose/store-listing.png",
-      "/images/signpose/gesture-detection-demo.mp4",
-      "/images/signpose/classroom-scene.png",
-      "/images/signpose/hand-shape-editor.png",
-      "/images/signpose/architecture-diagram.png"
+
     ],
     githubUrl: "https://github.com/Somanyloopholes/SignPoseVR",
     liveUrl: "https://www.meta.com/experiences/24069781642651333/"
@@ -376,32 +363,41 @@ The first real pass at the visual direction wasn't this one. I built it out in g
       "Louvain Clustering",
       "Data Visualization",
     ],
-    role: "Solo project — designed the full analytical methodology (variable selection, KNN parameter tuning, meta-cluster interpretation) and authored all 10 R pipeline scripts, from data ingestion through final visualization.",
+    role: "Solo project: designed the full analytical methodology, from variable selection through KNN parameter tuning to meta-cluster interpretation, and authored all 10 R pipeline scripts, from data ingestion through final visualization.",
 
-    problemStatement:
-      "Neighborhood-level inequality in the Chicago metro area is usually studied through fixed administrative boundaries, which can mask gradual, cross-boundary change. This project instead builds similarity-based network graphs of Census block groups from multivariate sociodemographic features, applies Louvain community detection to surface latent neighborhood typologies, and tracks how individual geographic units move between those typologies across three time periods — exposing gentrification, decline, and stabilization patterns that boundary-based analyses tend to miss.",
+    problemStatement: `Neighborhood-level inequality in the Chicago metro area is usually studied through fixed administrative boundaries like Community Areas, and those boundaries can mask change that happens gradually and doesn't respect a line on a map. This project builds similarity-based network graphs of Census block groups instead, using multivariate sociodemographic features to connect each block group to the ones most like it, then applies Louvain community detection to surface neighborhood typologies that emerge from the data itself rather than from administrative lines. Tracking how individual block groups move between those typologies across three time periods exposes gentrification, decline, and stabilization patterns that boundary-based analysis tends to miss.`,
 
-    architecture:
-      "A 10-script sequential R pipeline where each stage consumes the previous stage's output. It starts by pulling ACS 5-year estimates and tract-level poverty data from the Census API for Cook County block groups across 2013, 2018, and 2023, then joins those to 2020 TIGER/Line geometries and computes derived ratios (poverty rate, education, renter share, etc.). Chicago crime counts and CTA rail accessibility are layered on via spatial joins and a centroid-to-station distance matrix. Block groups are then aggregated to Community Areas / Municipalities, visualized as choropleths and change maps, and finally fed into the network-analysis stage: an 8-variable KNN similarity graph clustered with Louvain community detection, with raw cluster IDs mapped to seven interpretable meta-cluster labels and visualized as year-over-year alluvial flow diagrams.",
+    architecture: `**Data collection:** The pipeline starts by pulling 24 variables from the Census Bureau's American Community Survey (ACS), plus tract-level poverty data pulled separately since it isn't available at the block group level. A block group is the smallest geography the Census publishes detailed data for, typically a few hundred to a few thousand people, small enough to capture real neighborhood-level variation instead of averaging it away. Data comes in for three years: 2013, 2018, and 2023.
 
-    methodology:
-      "For each snapshot year, eight socioeconomic and housing variables (Hispanic share, bachelor's-plus attainment, median home value, median age, median household income, crime count, unemployment rate, poverty rate) are z-score normalized, and a full Euclidean distance matrix is used to build a k=8 nearest-neighbors graph, symmetrized to remove duplicate edges. Louvain community detection is run independently on each year's graph. Because Louvain's raw community IDs aren't stable across separate runs, I built year-specific lookup tables mapping each year's cluster IDs to seven consistent, interpretable meta-cluster labels (e.g., Elite & Wealthy, High-Poverty, Aging Suburban), which lets the same neighborhood 'type' be tracked as it evolves from 2013 to 2023. Transition matrices and ggalluvial-based flow diagrams then visualize how block groups moved between typologies across each year pair.",
+**Building the spatial base:** Those ACS numbers get joined to 2020 TIGER/Line block group boundaries, the Census Bureau's official geographic shape files, so every year of data sits on the same consistent map instead of drifting as boundaries get redrawn between census cycles. From the raw ACS counts I compute 11 derived ratios (poverty rate, percent renter, bachelor's-plus attainment, and others), each with a safe-division check so a block group with zero population doesn't cause a divide-by-zero error downstream. Chicago crime counts and CTA rail accessibility get layered in next, crime through a spatial join that counts incidents falling inside each block group's boundary, rail access through a distance matrix measuring how far each block group's center sits from the nearest station.
+
+**Aggregation and visualization:** Block groups get aggregated up to Community Areas (Chicago's official neighborhoods) and Municipalities (for suburban Cook County), weighted by population so a dense block group counts more than a sparse one. Every variable gets mapped as a choropleth, a map where each region is shaded by its value for that variable, alongside a histogram showing the same data as a distribution. That runs for all three years individually, then again as percent-point change maps between year pairs, so you can see not just where values are high, but where they moved the most.
+
+**Network construction and clustering:** This is the core of the analysis. For each year, I take 8 socioeconomic and housing variables per block group and build a k-nearest-neighbors graph, a network where each block group connects to the 8 other block groups most similar to it across those variables, regardless of whether they're geographically adjacent. Louvain community detection, a network science algorithm that finds tightly connected clusters within a graph, runs on top of that network to surface groups of block groups that behave like a shared neighborhood type. I ran this independently for each of the three years, then mapped the raw cluster outputs onto 7 consistent, human-readable labels, things like Elite & Wealthy, Working-Class Transitional, and High-Poverty, so the same neighborhood type can be tracked as it changes over the decade instead of getting relabeled from scratch every year.
+
+**Longitudinal tracking:** The final stage builds transition matrices, tables showing how many block groups moved from each meta-cluster to each other one between year pairs, and turns those into alluvial flow diagrams, the kind of chart where colored bands flow from one category into another across time, so the whole decade of change reads as one continuous picture instead of three disconnected snapshots.`,
+
+    methodology: `The 8 variables that go into clustering (Hispanic population share, bachelor's-plus attainment, median home value, median age, median household income, crime count, unemployment rate, and poverty rate) get z-score normalized first, meaning every variable is rescaled based on how far each value sits from the average. Without that step, a variable like median home value, which can range into the hundreds of thousands, would dominate the distance calculation over something like unemployment rate, which lives in the single digits as a percentage.
+
+From there I compute the distance between every pair of block groups and keep each one's 8 closest matches, which becomes the k-nearest-neighbors graph. I symmetrize the edges afterward, since a block group being one of your 8 closest matches doesn't automatically mean you're one of theirs, and an undirected graph needs that relationship to run both ways.
+
+Louvain runs independently on each year's graph, and that independence creates a real problem: it assigns cluster IDs arbitrarily, so cluster 3 in the 2013 run has no relationship to cluster 3 in 2018 even if they represent the same kind of neighborhood. I handled that by building year-specific lookup tables that map each year's raw cluster IDs onto the same 7 meta-cluster labels, based on comparing each cluster's actual profile (its average income, poverty rate, and so on) across years. That's what makes it possible to say a block group moved from High-Poverty to Working-Class Transitional between 2013 and 2018, instead of just reporting that it moved from cluster 4 to cluster 2.`,
 
     challenges: [
       {
         title: "Reconciling Heterogeneous Data Sources",
         description:
-          "Aligning Census ACS data, Chicago crime records, and CTA rail GeoJSON into a single consistent spatial base across three time periods required significant data engineering. Some candidate data layers were ultimately dropped due to excessive gaps in coverage.",
+          "The Census API, Chicago's crime data portal, and CTA's rail station data all come in different formats with different geographic precision and their own quirks. Getting all three onto the same 2020 block group base, consistently across three separate years, took up most of the actual engineering time on this project. A few candidate data layers didn't make it in at all, since the gaps in their coverage were bad enough that including them would have hurt the analysis more than it helped.",
       },
       {
         title: "Interpreting Unlabeled Clusters Across Years",
         description:
-          "Louvain community detection assigns arbitrary cluster IDs that aren't stable between separate yearly runs. I built year-specific lookup tables to manually map each year's raw cluster IDs onto seven consistent meta-cluster labels, so the same neighborhood type could be tracked as it changed over the decade rather than relabeling itself every year.",
+          "Louvain hands you numbered clusters with no inherent meaning, and those numbers reset with every run. Turning cluster 4 in one year and cluster 1 in another into the same trackable label meant actually reading each cluster's profile and deciding what it represented, then documenting that mapping so the seven meta-clusters stayed consistent across the whole decade instead of drifting.",
       },
       {
         title: "Choosing a Similarity Metric Over Fixed Boundaries",
         description:
-          "Administrative boundaries like Community Areas can obscure gradual, cross-boundary neighborhood change. I chose to build a k-nearest-neighbors graph on z-score normalized socioeconomic features instead, which meant writing custom distance-matrix and edge-symmetrization logic rather than relying on an out-of-the-box clustering routine end-to-end.",
+          "Community Areas and other administrative boundaries are convenient but arbitrary from a data standpoint. They can lump very different block groups together or split apart ones that are practically identical. Building a similarity graph instead meant writing the distance matrix and edge symmetrization logic myself rather than calling a single out-of-the-box clustering function, but it meant the clusters reflected actual similarity in the data instead of a line drawn for administrative reasons.",
       },
     ],
 
@@ -449,7 +445,7 @@ The first real pass at the visual direction wasn't this one. I built it out in g
     ],
 
     impactsAndKeyTakeaways:
-      "This was an independent, self-directed project rather than a deployed tool — no dashboard or external users exist yet, and because Louvain clustering is unsupervised, there's no accuracy metric to report; the value is in the patterns the network-based approach surfaces. Building the pipeline end to end reinforced that similarity graphs over administrative boundaries can reveal gradual neighborhood transitions — gentrification, decline, and stabilization — that choropleth-by-Community-Area analysis tends to smooth over. A natural next step would be turning the static outputs into an interactive dashboard so the year-over-year transitions can be explored rather than just viewed as static flow diagrams.",
+      "This is an independent, self-directed project, not a deployed tool. There's no dashboard and no external users yet, and because Louvain clustering is unsupervised, there's no accuracy score to report the way there would be with a classification model. The value sits in the patterns the network-based approach surfaces, not in a single performance number. Building the pipeline end to end reinforced why similarity graphs are worth the extra effort over administrative boundaries: gentrification, decline, and stabilization all tend to happen gradually and across boundary lines, and a choropleth broken out by Community Area smooths right over that kind of change. The natural next step would be turning these static outputs into an interactive dashboard, so someone could actually explore the year-over-year transitions themselves instead of only seeing them as fixed flow diagrams.",
 
     media: [
       "/projects/spatial-inequality/cluster-map-2013.png",
@@ -459,6 +455,7 @@ The first real pass at the visual direction wasn't this one. I built it out in g
       "/projects/spatial-inequality/choropleth-median-income.png",
       "/projects/spatial-inequality/percent-point-change-map.png",
     ],
+    githubUrl: "https://github.com/Somanyloopholes/Spatial-inequality-analysis",
   },
   {
     id: "iit-campus-assistant",
@@ -475,32 +472,29 @@ The first real pass at the visual direction wasn't this one. I built it out in g
       "LLM Integration",
       "Streamlit",
     ],
-    role: "Built the real-time data layer for the events domain and led the integration work stitching three independently-built subsystems into one working app. That included the Kafka producer that scrapes the dining API and IIT's ICS calendar feed, the Kafka consumer that persists incoming batches to SQLite and auto-triggers a FAISS index rebuild for events, the events FAISS index build pipeline, the SQL-based event date-window and keyword query API, and the constrained semantic retrieval logic that narrows FAISS search to date-relevant events before ranking them. Teammates on the other two subgroups built the curriculum RAG pipeline (web crawling, chunking, hybrid retrieval) and the dining data pipeline plus the chatbot's intent-routing and Streamlit UI layer.",
+    role: "Built the real-time events pipeline (Kafka ingestion, SQLite persistence, FAISS indexing, and time-aware retrieval) and led integration across the team's three independently-built subsystems into one working app.",
 
-    problemStatement:
-      "University students and prospective applicants need quick, accurate answers spanning three separate domains — dining menus, campus events, and academic/admissions information — but the underlying sources are scattered across a dining API, an ICS calendar feed, and dozens of catalog and admissions web pages. The Campus Assistant consolidates all three into a single natural-language interface, using structured retrieval rather than open-ended generation to reduce hallucinated answers.",
+    problemStatement: "University students and prospective applicants need quick answers spanning three separate domains: dining menus, campus events, and academic or admissions information. The underlying sources are scattered across a dining API, an ICS calendar feed, and dozens of catalog and admissions web pages. The Campus Assistant consolidates all three into one natural-language interface, and it leans on structured retrieval rather than open-ended generation specifically to cut down on hallucinated answers.",
 
-    architecture:
-      "Data ingestion runs event-driven through Kafka: a producer scrapes the DineOnCampus REST API and IIT's ICS calendar feed and publishes typed batches (menu_batch / events_batch) to a shared topic. A long-lived consumer dispatches each batch by type — writing menu items to SQLite, or writing events to SQLite and then auto-triggering a rebuild of the events FAISS index so semantic search stays current. Kafka offsets are only committed once both the SQLite write and the FAISS rebuild succeed, so a crash mid-batch replays cleanly on restart. In parallel, a separate batch pipeline crawls university web pages, cleans and chunks the content, and builds a curriculum FAISS index. At query time, a Streamlit chat UI sends the question to an LLM-based intent router (Llama-3.3-70B via Groq), which classifies it as dining, events, or curriculum and extracts structured filters; dining and date-only event queries run as SQL lookups, topic-based event queries use SQL to pre-filter by date before FAISS ranks within that valid set, and curriculum queries go through FAISS semantic search.",
+    architecture: "Ingestion (my work): Data comes in event-driven through Apache Kafka, a system for streaming data between services in real time rather than on a fixed schedule. A producer I built scrapes the DineOnCampus REST API and IIT's ICS calendar feed, then publishes typed batches, tagged either menu_batch or events_batch, to a shared Kafka topic (a named channel that other services can listen to). A consumer I also built listens on that topic and handles each batch by type: menu items get written straight to SQLite, while events get written to SQLite and then trigger an automatic rebuild of the events search index, so semantic search never falls out of date. Kafka offsets are essentially a bookmark of what's already been processed, and I only commit that bookmark once both the SQLite write and the index rebuild succeed. That means a crash partway through a batch doesn't silently lose or duplicate data, the consumer just replays cleanly from the last successful point on restart.\n\nEvents search index (my work): FAISS is a library for fast similarity search over vector embeddings, numeric representations of text that let a computer compare meaning rather than just matching exact words. I built the pipeline that reads events out of SQLite, builds a composite string for each one (title, date, location, and description combined), encodes it with a sentence-embedding model, and stores the result in an IndexFlatIP index, a FAISS index type built for cosine similarity search, alongside a metadata file that maps each vector back to its original event.\n\nCurriculum pipeline (teammate's work): In parallel, a separate batch pipeline built by a teammate crawls university web pages, cleans and chunks the content, and builds its own FAISS index for academic and admissions material. That side of the system isn't something I built, but it's worth naming since it's the third domain the chatbot has to route between.\n\nQuery-time routing: A Streamlit chat interface, built by a teammate, sends each question to an LLM-based intent router (also a teammate's work) that classifies the question as dining, events, or curriculum and pulls out structured filters like date or dietary preference. Dining questions and date-only event questions run as direct SQL lookups. Curriculum questions go through the teammate-built FAISS search. Topic-based event questions are where my constrained retrieval logic comes in: SQL narrows the candidate set by date first, and only then does FAISS rank within that narrowed set for relevance.",
 
-    methodology:
-      "The core anti-hallucination pattern is constrained semantic retrieval for events: rather than letting vector search rank across all events regardless of time relevance, a SQL date-range filter first narrows the candidate set to a `valid_urls` list, which is then passed into the FAISS search so it only ranks chunks whose source event falls within that window. Event embeddings are built from a composite string (title, date, location, description), encoded with `all-MiniLM-L6-v2`, L2-normalized, and stored in an `IndexFlatIP` cosine-similarity index alongside a JSON metadata sidecar. On the ingestion side, tying Kafka offset commits to the success of both the SQLite write and the FAISS rebuild step gives the pipeline fault-tolerant replay behavior if either step fails mid-batch.",
+    methodology: "The core pattern I built for events is constrained retrieval rather than pure semantic search. A plain vector search over events can easily surface something that's a close topical match but happened months ago or hasn't happened yet, since embedding similarity has no built-in sense of time. My fix runs the SQL date filter first, narrowing the candidate set down to a list of valid event URLs within the relevant window, and only passes that narrowed list into FAISS. The vector search never even sees an event outside the requested timeframe, so it can't rank one highly by accident.\n\nOn the ingestion side, tying Kafka's offset commits to both the SQLite write and the FAISS rebuild succeeding was a deliberate fault-tolerance choice. If either step fails mid-batch, the consumer doesn't move its bookmark forward, so it picks the batch back up cleanly on restart instead of leaving the search index quietly out of sync with what's actually in the database.",
 
     challenges: [
       {
         title: "Keeping Semantic Search Time-Aware",
         description:
-          "A pure vector search over events can surface something semantically similar but months out of date. I solved this by having a SQL date-range query narrow the candidate set first, then passing only those valid event URLs into the FAISS search — so the vector index only ever ranks within events that are actually relevant to the requested time window.",
+          "A pure vector search over events can surface something semantically similar but months out of date, since embedding similarity has no concept of time on its own. I solved this by having a SQL date-range query narrow the candidate set first, then passing only those valid event URLs into the FAISS search, so the vector index only ever ranks within events that are actually relevant to the requested time window.",
       },
       {
         title: "Committing Kafka Offsets Safely",
         description:
-          "If the consumer committed offsets right after reading a message, a crash between the SQLite write and the FAISS rebuild could leave the search index stale with no way to detect it. I tied offset commits to both downstream writes succeeding, so a failure anywhere in that chain causes the consumer to replay the batch from the last successful point on restart, rather than silently losing an update.",
+          "If the consumer committed its offset right after reading a message, a crash between the SQLite write and the FAISS rebuild could leave the search index stale with no way to detect it. I tied offset commits to both downstream writes succeeding, so a failure anywhere in that chain makes the consumer replay the batch from the last successful point on restart instead of silently losing an update.",
       },
       {
         title: "Integrating Three Independently-Built Subsystems",
         description:
-          "The curriculum RAG pipeline, the dining/chatbot stack, and the events/Kafka layer were each built by different people with different assumptions about schemas and interfaces. Getting all three wired into one Streamlit app that routes correctly meant reconciling those interfaces and debugging the seams between subsystems, not just building any one piece in isolation.",
+          "The curriculum RAG pipeline, the dining and chatbot stack, and the events and Kafka layer were each built by different people with different assumptions about schemas and interfaces. Getting all three wired into one Streamlit app that routes correctly meant reconciling those interfaces and debugging the seams between subsystems, which turned out to be a different kind of problem than building any one piece in isolation.",
       },
     ],
 
@@ -549,8 +543,7 @@ The first real pass at the visual direction wasn't this one. I built it out in g
       },
     ],
 
-    impactsAndKeyTakeaways:
-      "The most useful pattern to come out of this project was combining structured SQL filtering with vector search rather than treating them as alternatives — using SQL to establish what's temporally valid before FAISS ranks by relevance meaningfully cut down on the chatbot confidently citing an event that had already happened. Tying Kafka offset commits to downstream write success was a small design choice that made the ingestion pipeline resilient to partial failures without needing a separate dead-letter queue. The system runs on localhost with the producer triggered manually rather than on an automated schedule, and there's no usage data or deployment beyond local testing — the value here was in designing and integrating a coherent multi-source retrieval architecture, not in production traffic.",
+    impactsAndKeyTakeaways: "The most useful pattern to come out of this project was combining structured SQL filtering with vector search instead of treating them as alternatives to each other. Using SQL to establish what's temporally valid before FAISS ranks by relevance meaningfully cut down on the chatbot confidently citing an event that had already happened. Tying Kafka offset commits to downstream write success was a small design choice that made the ingestion pipeline resilient to partial failures without needing a separate error-handling system on top. The system runs on localhost, with the producer triggered manually rather than on a schedule, and there's no usage data or deployment beyond local testing. The value here was in designing and integrating a coherent multi-source retrieval architecture, not in production traffic.",
 
     media: [
       "/projects/campus-assistant/architecture-diagram.png",
@@ -563,7 +556,7 @@ The first real pass at the visual direction wasn't this one. I built it out in g
   },
   {
     id: "confidential-ml-federated-learning",
-    title: "ConfidentialML: Privacy-Preserving Federated Learning",
+    title: "ConfidentialML",
     shortDescription:
       "A containerized federated learning system combining Paillier homomorphic encryption with Gaussian differential privacy, so multiple clients can jointly train a logistic regression model without the server — or any other party — ever seeing raw data or plaintext model updates.",
     coverImage: "/confidentialMLCover.png",
@@ -575,32 +568,29 @@ The first real pass at the visual direction wasn't this one. I built it out in g
       "Flask",
       "Docker",
     ],
-    role: "Co-built with one other contributor, roughly equal (~50/50) split across the codebase — server orchestration, client-side training/encryption/DP logic, Docker-based multi-container deployment, and the final report and presentation. The team worked feature-branch by feature-branch (FedAvg, homomorphic encryption, ML implementation, differential privacy), so component-level ownership isn't individually tracked.",
+    role: "Co-built end-to-end with one other contributor, roughly equal split across server orchestration, client-side encryption and differential privacy logic, Docker deployment, and the final report.",
 
-    problemStatement:
-      "How can multiple parties collaboratively train a machine learning model when they can't share their private data with each other and can't fully trust the central server coordinating the training? This is a real constraint in regulated or adversarial settings — a consortium of banks that can't pool customer data across institutions for fraud detection, or allied organizations that need a shared model without exposing classified inputs to one another. ConfidentialML is a technical demonstration of an architecture for that problem, not a deployed system for either use case.",
+    problemStatement: "How can multiple parties train a machine learning model together when they can't share their private data with each other and can't fully trust the server coordinating the training? That's a real constraint in regulated or adversarial settings: a group of banks that can't pool customer data across institutions for fraud detection, or allied organizations that need a shared model without exposing classified inputs to one another. ConfidentialML is a technical demonstration of an architecture for that problem, not a deployed system for either use case.",
 
-    architecture:
-      "A Flask server orchestrates training rounds and aggregates encrypted updates without ever decrypting them, while any number of Flask clients each hold their own private data. All traffic is JSON over HTTP on a Docker bridge network. Encrypted model weights flow between server and clients, but Paillier private keys are distributed peer-to-peer between clients and never touch the server. The whole stack — server plus a configurable number of clients — is spun up via Docker Compose, with all training and privacy parameters exposed as environment variables.",
+    architecture: "The players: A Flask server coordinates training rounds, and any number of Flask clients each hold their own private data. Everything communicates as JSON over HTTP on a Docker bridge network, meaning the whole system runs as separate containers that can talk to each other without being exposed to the outside world. Encrypted model weights move back and forth between the server and clients, but the encryption keys travel directly between clients and never touch the server at all.\n\nHomomorphic encryption: This is the property the whole design leans on. Paillier is an encryption scheme with a specific and unusual trait: you can add two encrypted numbers together and get a correctly encrypted sum, without ever decrypting either one. That means the server can combine every client's encrypted update into one combined model update while never seeing a single plaintext value.\n\nKey generation and distribution: Once enough clients register, the server randomly elects one of them as Leader. The Leader generates a 2048-bit Paillier keypair, a public key and a private key, sends the public key to the server, and shares the private key directly with the other clients. Clients that join after key generation already happened still get picked up through the Leader's key-sharing endpoint, so late joiners aren't left out.\n\nOne training round: Selected clients decrypt the current global model, train a logistic regression model from scratch on their own local data, and compute how much their local weights changed. Before sending that update anywhere, each client clips it (capping how large any single value in the update is allowed to be) and adds Gaussian noise on top, which is the actual differential privacy step, then re-encrypts the noised update with the Paillier public key and sends it to the server.\n\nAggregation without decryption: The server performs Federated Averaging, a weighted average of every client's update, directly on the encrypted values. Because of Paillier's additive property, that average comes out correctly encrypted without the server ever decrypting a single client's contribution. This repeats for a configurable number of rounds, and only at the very end does each client decrypt the final model locally to check how well it actually performs.",
 
-    methodology:
-      "Each round follows a fixed lifecycle: clients register with the server, and once a minimum number have joined, the server randomly elects one as Leader. The Leader generates a 2048-bit Paillier keypair, sends the public key to the server, and distributes the private key directly to the other clients (with late joiners picked up via the Leader's key-sharing endpoint). In each training round, selected clients decrypt the current global model, train a from-scratch logistic regression locally, L2-clip their weight update, add Gaussian noise for differential privacy, re-encrypt with the Paillier public key, and send it back. The server performs weighted Federated Averaging directly on the ciphertexts — exploiting Paillier's additive homomorphism — so it aggregates updates without ever decrypting a single one. This repeats for a configurable number of rounds, after which each client decrypts the final model locally to evaluate it.",
+    methodology: "Each round follows a fixed lifecycle. Clients register with the server, and once a minimum number have joined, the server randomly elects a Leader. The Leader generates the Paillier keypair, keeps the private key out of the server's hands entirely, and distributes it directly to the other clients instead, with a separate path for anyone who joins late.\n\nIn each round, selected clients decrypt the current global model, train locally, clip their update, add Gaussian noise for differential privacy, re-encrypt, and send the result back. The server then aggregates everything as ciphertext arithmetic, exploiting Paillier's additive property rather than decrypting anything to average it conventionally. That's the core mechanism that makes the whole system work: privacy isn't bolted on as a separate step, it's built into how the math itself gets done.\n\nA single round's noise doesn't capture the full privacy cost of training over many rounds, since each additional round leaks a little more information even with noise added every time. We implemented Rényi Differential Privacy accounting, a method for tracking that cumulative privacy cost across rounds, so a client halts training entirely if the running total would exceed the configured privacy budget. That turns a one-shot privacy guarantee into something enforced across the whole training run.",
 
     challenges: [
       {
         title: "Aggregating Without Ever Decrypting",
         description:
-          "The server needed to perform Federated Averaging across all client updates while never having access to the decryption key. This meant implementing weighted aggregation as pure ciphertext arithmetic — scalar multiplication and addition on Paillier-encrypted numbers — exploiting the cryptosystem's additive homomorphism rather than any conventional aggregation approach.",
+          "The server needed to perform Federated Averaging across every client's update while never having access to the decryption key at all. That meant implementing weighted aggregation as pure ciphertext arithmetic, scalar multiplication and addition performed directly on Paillier-encrypted numbers, rather than any conventional aggregation approach that assumes you can see the actual values.",
       },
       {
         title: "Keeping Keys Away from the Server",
         description:
-          "For the server to remain untrusted, private keys could never pass through it. That pushed key distribution into a peer-to-peer pattern where a randomly elected Leader client generates the keypair and shares the private key directly with other clients — including handling clients that join late, after the initial key generation has already happened.",
+          "For the server to stay untrusted, private keys could never pass through it, not even briefly. That pushed key distribution into a peer-to-peer pattern, where a randomly elected Leader client generates the keypair and shares the private key directly with the others, including handling clients that join late, after key generation has already happened.",
       },
       {
         title: "Composing Privacy Loss Across Rounds",
         description:
-          "A single round's differential privacy noise doesn't capture the total privacy cost of training over many rounds. We implemented Rényi Differential Privacy accounting to track composed epsilon across rounds, with clients halting training if the running privacy budget would exceed the configured target — turning a one-shot privacy guarantee into an enforced multi-round budget.",
+          "A single round's differential privacy noise doesn't capture the total privacy cost of training over many rounds. We implemented Rényi Differential Privacy accounting to track composed epsilon (the cumulative privacy loss) across rounds, with clients halting training if the running privacy budget would exceed the configured target. That turned a one-shot privacy guarantee into an enforced, multi-round budget instead.",
       },
     ],
 
@@ -643,8 +633,7 @@ The first real pass at the visual direction wasn't this one. I built it out in g
       },
     ],
 
-    impactsAndKeyTakeaways:
-      "As a proof-of-concept rather than a deployed system, the clearest result is a confirmed one: lowering the privacy budget (ε) measurably reduces model accuracy — the privacy-utility trade-off playing out directly in a working system rather than just in theory. Building both the homomorphic aggregation and the differential privacy accounting side by side made that trade-off concrete instead of abstract. The system was only tested up to 5 concurrent clients, so claims about larger-scale behavior would need further benchmarking, and no formal privacy proof accompanies the implementation — it applies well-established DP and HE formulas rather than proving new guarantees.",
+    impactsAndKeyTakeaways: "As a proof of concept rather than a deployed system, the clearest result is a confirmed one: lowering the privacy budget measurably reduces model accuracy, the privacy-utility tradeoff playing out directly in a working system instead of staying purely theoretical. Building the homomorphic aggregation and the differential privacy accounting side by side made that tradeoff concrete instead of abstract. The system was only tested up to 5 concurrent clients, so any claim about larger-scale behavior would need further benchmarking, and no formal privacy proof accompanies the implementation. It applies well-established DP and HE formulas rather than proving new guarantees of its own.",
 
     media: [
       "/projects/confidential-ml/architecture-diagram.png",
@@ -652,6 +641,7 @@ The first real pass at the visual direction wasn't this one. I built it out in g
       "/projects/confidential-ml/docker-compose-setup.png",
       "/projects/confidential-ml/ci-pipeline.png",
     ],
+    githubUrl: "https://https://github.com/CLEMS3/ConfidentialML.com/Somanyloopholes",
   },
   {
     id: "ieee-iit-style-guide",
@@ -663,27 +653,24 @@ The first real pass at the visual direction wasn't this one. I built it out in g
       "Figma",
       "UI/UX"
     ],
-    role: "Board Member, IEEE Student Chapter — Illinois Institute of Technology",
+    role: "Board Member, IEEE Student Chapter, Illinois Institute of Technology (Social Media & Community Engagement)",
 
-    problemStatement:
-      "As a board member responsible for the chapter's visual output, I was designing posters and materials that had to represent two separate brands at once — IEEE's global identity and Illinois Tech's institutional identity — with no shared reference for how they should be combined. Every new poster meant re-deciding the same things: which blue, which logo lockup, which pairing was actually correct.",
+    problemStatement: "As a board member responsible for the chapter's visual output, I was designing posters and materials that had to represent two separate brands at once, IEEE's global identity and Illinois Tech's institutional identity, with no shared reference for how the two should actually be combined. Every new poster meant re-deciding the same things from scratch: which blue, which logo lockup, which pairing was actually correct.",
 
-    architecture:
-      "The guide is structured in four layers that build on each other: a color system (primary palette plus a tint scale for flexible secondary use), a modular typographic scale (H1–H5, body, small), a component layer (buttons, forms, alerts, tags, tooltips) so the system could extend past print into digital work, and — the core of the project — a logo lockup matrix covering IEEE alone, IEEE + Illinois Tech side-by-side, abbreviated and combined marks, and light/dark-mode variants.",
+    architecture: "The guide is built in four layers, each one building on the layer before it.\n\nColor: A primary palette plus a tint scale, meaning each core color also comes with a range of lighter and darker steps derived from it, so there's an approved way to use a lighter version of a brand color for something like a background or a hover state instead of someone picking an arbitrary shade by eye.\n\nType: A modular typographic scale, a type system where each size is calculated as a fixed ratio of the one before it rather than picked by feel, covering H1 through H5 plus body and small text. That ratio is what keeps every heading level feeling proportionate to the others instead of arbitrary.\n\nComponents: A layer covering buttons, forms, alerts, tags, and tooltips, which is what let the system extend past printed posters into digital work like the chapter's web presence, instead of staying a print-only reference.\n\nLogo lockups: The core of the project. A lockup is a specific, pre-approved way of combining or positioning two logos together, and I built out a full matrix of them: IEEE alone, IEEE and Illinois Tech side by side, abbreviated and combined marks, and light and dark-mode variants of each. Instead of leaving it to whoever's building a poster that week to decide how the two logos should sit next to each other, every valid combination already exists as a documented, ready-to-use asset.",
 
-    methodology:
-      "I audited both IEEE's and Illinois Tech's existing brand guidelines to identify the non-negotiable constraints from each side, then extracted the primary colors and typography into a shared token set. From there I defined interactive states (default, hover, disabled) for reusable components, and built out every approved logo pairing as its own documented lockup rather than leaving combination rules to individual judgment. The guide was then applied directly to real deliverables — chapter event posters — rather than treated as a standalone reference document.",
+    methodology: "I started by auditing both IEEE's and Illinois Tech's existing brand guidelines to pull out the non-negotiable constraints from each side, the things that genuinely couldn't be changed or reinterpreted. From there I extracted the primary colors and typography into one shared token set both brands could sit inside of.\n\nOnce the core tokens existed, I defined interactive states, meaning how a component actually looks in its default resting state, on hover, and when disabled, for every reusable component in the system, and built out every approved logo pairing as its own separately documented lockup rather than leaving the combination rules open to individual judgment. The guide then went straight into use on real deliverables, the chapter's event posters, instead of sitting as a reference document nobody actually opened.",
 
     challenges: [
       {
         title: "Reconciling two brand identities",
         description:
-          "IEEE and Illinois Tech each have their own strict, independent brand guidelines. Neither could be overridden, so the work was entirely about finding a structure — color tints, lockup variants, pairing rules — that respected both without either brand looking secondary.",
+          "IEEE and Illinois Tech each have their own strict, independent brand guidelines, and neither one could be overridden by the other. The entire project came down to finding a structure, tint scales, lockup variants, explicit pairing rules, that respected both identities at once without either brand ending up looking secondary to the other.",
       },
       {
         title: "Making it usable by the whole board, not just me",
         description:
-          "A style guide only helps if other people can apply it without asking. I had to be explicit enough — pre-approved lockups, defined states, a full type scale — that any board member could pull from it directly and produce compliant work.",
+          "A style guide only actually helps if other people can pick it up and use it without having to ask me first. That meant being explicit enough, pre-approved lockups, clearly defined component states, a full type scale, that any board member could pull directly from the guide and produce something on-brand without needing to check in.",
       },
     ],
 
@@ -720,7 +707,7 @@ The first real pass at the visual direction wasn't this one. I built it out in g
     ],
 
     impactsAndKeyTakeaways:
-      "The guide gave the chapter a single source of truth for brand-compliant materials, removing the recurring back-and-forth over which blue or which logo pairing was safe to use. Posters produced from the spec stayed visually consistent even when made weeks apart by different people. The bigger lesson was that a style guide is only as good as its second use — the harder part isn't making a document look good, it's making the decisions concrete enough that someone else can actually apply them under a deadline without re-litigating brand choices.",
+      "The guide gave the chapter a single source of truth for brand-compliant materials, which removed the recurring back-and-forth over which blue or which logo pairing was actually safe to use. Posters produced from the spec stayed visually consistent even when they were made weeks apart by completely different people. The bigger lesson was that a style guide is only as good as its second use. The hard part was never making the document itself look good, it was making the decisions inside it concrete enough that someone else could actually apply them under a deadline without having to re-litigate brand choices from scratch.",
 
     media: [
       // Add screenshots of the style guide sections and the finished posters, e.g.:
@@ -728,5 +715,6 @@ The first real pass at the visual direction wasn't this one. I built it out in g
       // "/projects/ieee-iit/poster-1.png",
       // "/projects/ieee-iit/poster-2.png",
     ],
+    figmaUrl: "https://https://www.figma.com/design/wGXjNCxbwX4mIP3iLWY920/IEEE-Design-doc?node-id=40-402&t=96HiItcQzlQJmGt6-1.figma.com",
   }
 ];

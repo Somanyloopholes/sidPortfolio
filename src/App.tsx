@@ -55,7 +55,7 @@ function App() {
   };
 
   return (
-    <div className='flex min-h-screen w-full flex-col bg-[#141413] text-[#faf9f5] font-inter overflow-x-hidden relative'>
+    <div className='flex min-h-screen w-full flex-col bg-[#141413] text-[#faf9f5] font-inter overflow-x-clip relative'>
       <PlusPatternBackground />
       <Navbar />
       <main className='mt-10 flex-1 flex w-full relative'>
@@ -67,6 +67,10 @@ function App() {
             initial="initial"
             animate="animate"
             exit="exit"
+            transformTemplate={({ x }, generated) => {
+              if (x === '0%' || x === 0) return 'none';
+              return generated;
+            }}
             className="w-full flex-1 flex flex-col items-center"
           >
             {element}

@@ -12,7 +12,7 @@ const getMarkdownComponents = (textClass: string = "text-tertiary-text") => ({
   li: ({ children }: any) => <li className="mb-1">{children}</li>,
   img: ({ src, alt }: any) => (
     <div className="w-full my-6 flex items-center justify-center">
-      <img src={src} alt={alt} className="max-w-full h-auto object-contain border border-hero-accent/30 bg-primary-background" />
+      <img src={src} alt={alt} className="w-full h-auto object-contain border border-hero-accent/30 bg-primary-background" />
     </div>
   )
 });
@@ -31,6 +31,25 @@ const CustomGithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
   >
     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
     <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
+  </svg>
+);
+
+const CustomFigmaIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="size-full"
+    {...props}
+  >
+    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+    <path d="M15 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+    <path d="M6 3m0 3a3 3 0 0 1 3 -3h6a3 3 0 0 1 3 3v0a3 3 0 0 1 -3 3h-6a3 3 0 0 1 -3 -3z" />
+    <path d="M9 9a3 3 0 0 0 0 6h3m-3 0a3 3 0 1 0 3 3v-15" />
   </svg>
 );
 
@@ -187,7 +206,7 @@ export default function ProjectsPage() {
                 transition={{ layout: { type: "spring", stiffness: 300, damping: 30 } }}
                 key={project.id}
                 onClick={() => setSelectedProject(project)}
-                className={`w-full ${spanClass} border border-hero-accent bg-primary-background cursor-pointer rounded-none flex flex-col hover:border-hero-accent transition-colors group relative`}
+                className={`w-full ${spanClass} border border-hero-accent bg-primary-background cursor-pointer rounded-none flex flex-col hover:border-hero-accent transition-colors group relative overflow-hidden`}
               >
                 {project.coverImage ? (
                   <div className="w-full border-b border-hero-accent relative bg-primary-background shrink-0">
@@ -196,8 +215,8 @@ export default function ProjectsPage() {
                 ) : (
                   <AbstractBanner />
                 )}
-                <div className="p-8 flex flex-col gap-4">
-                  <h3 className="text-sub-heading text-secondary-text group-hover:text-hero-accent transition-colors uppercase tracking-wide">{project.title}</h3>
+                <div className="p-6 flex flex-col gap-3 min-w-0 flex-1">
+                  <h3 className="text-title-small text-secondary-text group-hover:text-hero-accent transition-colors uppercase tracking-wide break-words line-clamp-3">{project.title}</h3>
                   <p className="text-body-prose text-tertiary-text line-clamp-3">{project.shortDescription}</p>
                 </div>
               </motion.div>
@@ -281,7 +300,7 @@ export default function ProjectsPage() {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.1 }}
-                          className="flex flex-col gap-4"
+                          className="flex flex-col gap-4 w-[90%] md:w-[75%] max-w-3xl mx-auto"
                         >
                           {selectedProject.role && (
                             <p className="text-micro-tag text-tertiary-text uppercase tracking-widest">{selectedProject.role}</p>
@@ -312,7 +331,7 @@ export default function ProjectsPage() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.15 }}
-                      className="flex flex-col gap-8"
+                      className="flex flex-col gap-8 w-[90%] md:w-[75%] max-w-3xl mx-auto"
                     >
                       {selectedProject.problemStatement && (
                         <div className="flex flex-col gap-2">
@@ -370,37 +389,6 @@ export default function ProjectsPage() {
                       )}
                     </motion.div>
                   )}
-
-                  {/* Media Showcase */}
-                  {selectedProject.media && selectedProject.media.length > 0 ? (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
-                      className="flex flex-col gap-4"
-                    >
-                      <h4 className="text-sub-heading text-secondary-text uppercase tracking-widest">Media Showcase</h4>
-                      <div className="flex flex-col gap-4">
-                        {selectedProject.media.map((mediaUrl, idx) => (
-                          mediaUrl.endsWith('.mp4') ? (
-                            <video key={idx} src={mediaUrl} autoPlay loop muted playsInline className="w-full border border-hero-accent/30 bg-primary-background" />
-                          ) : (
-                            <img key={idx} src={mediaUrl} alt={`${selectedProject.title} media ${idx + 1}`} className="w-full h-auto object-cover border border-hero-accent/30 bg-primary-background" />
-                          )
-                        ))}
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
-                      className="w-full aspect-video border border-hero-accent/30 bg-hero-accent/5 flex items-center justify-center relative overflow-hidden"
-                    >
-                       <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(166,216,0,0.05)_50%,transparent_75%,transparent_100%)] [background-size:20px_20px]" />
-                       <span className="text-hero-accent/50 text-sub-heading tracking-widest font-mono z-10">MEDIA SHOWCASE</span>
-                    </motion.div>
-                  )}
                   
                   {/* Action Buttons */}
                   <motion.div
@@ -409,12 +397,21 @@ export default function ProjectsPage() {
                     transition={{ delay: 0.4 }}
                     className="flex flex-wrap gap-4 pt-8 border-t border-hero-accent/20"
                   >
-                    <a href={selectedProject.liveUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-6 py-3 bg-hero-accent text-primary-background text-micro-tag hover:opacity-80 transition-opacity border border-hero-accent font-bold uppercase tracking-widest">
-                      <ExternalLink size={16} /> View Live Project
-                    </a>
-                    <a href={selectedProject.githubUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-6 py-3 bg-transparent text-secondary-text border border-hero-accent hover:bg-hero-accent/10 transition-colors text-micro-tag uppercase tracking-widest">
-                      <CustomGithubIcon className="size-4" /> GitHub Repository
-                    </a>
+                    {selectedProject.liveUrl && (
+                      <a href={selectedProject.liveUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-6 py-3 bg-hero-accent text-primary-background text-micro-tag hover:opacity-80 transition-opacity border border-hero-accent font-bold uppercase tracking-widest">
+                        <ExternalLink size={16} /> View Live Project
+                      </a>
+                    )}
+                    {selectedProject.githubUrl && (
+                      <a href={selectedProject.githubUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-6 py-3 bg-transparent text-secondary-text border border-hero-accent hover:bg-hero-accent/10 transition-colors text-micro-tag uppercase tracking-widest">
+                        <CustomGithubIcon className="size-4" /> GitHub Repository
+                      </a>
+                    )}
+                    {selectedProject.figmaUrl && (
+                      <a href={selectedProject.figmaUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-6 py-3 bg-transparent text-secondary-text border border-hero-accent hover:bg-hero-accent/10 transition-colors text-micro-tag uppercase tracking-widest">
+                        <CustomFigmaIcon className="size-4" /> Figma File
+                      </a>
+                    )}
                   </motion.div>
                 </div>
                 </div>
