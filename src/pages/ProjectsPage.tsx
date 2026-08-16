@@ -12,7 +12,8 @@ const getMarkdownComponents = (textClass: string = "text-tertiary-text") => ({
   li: ({ children }: any) => <li className="mb-1">{children}</li>,
   img: ({ src, alt }: any) => {
     if (alt?.startsWith('grid-3') && src) {
-      const srcs = src.split(',');
+      const decodedSrc = decodeURIComponent(src);
+      const srcs = decodedSrc.split(',');
       const caption = alt.includes(':') ? alt.split(':')[1].trim() : null;
       return (
         <figure className="w-full my-6 flex flex-col items-center justify-center">
