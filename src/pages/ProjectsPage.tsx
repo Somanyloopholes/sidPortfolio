@@ -10,11 +10,35 @@ const getMarkdownComponents = (textClass: string = "text-tertiary-text") => ({
   strong: ({ children }: any) => <strong className="text-secondary-text font-bold">{children}</strong>,
   ul: ({ children }: any) => <ul className={`list-disc list-inside mb-4 ${textClass}`}>{children}</ul>,
   li: ({ children }: any) => <li className="mb-1">{children}</li>,
-  img: ({ src, alt }: any) => (
-    <div className="w-full my-6 flex items-center justify-center">
-      <img src={src} alt={alt} className="w-full h-auto object-contain border border-hero-accent/30 bg-primary-background" />
-    </div>
-  )
+  img: ({ src, alt }: any) => {
+    if (alt?.startsWith('grid-3') && src) {
+      const srcs = src.split(',');
+      const caption = alt.includes(':') ? alt.split(':')[1].trim() : null;
+      return (
+        <figure className="w-full my-6 flex flex-col items-center justify-center">
+          <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
+            {srcs.map((s: string, i: number) => (
+              <div key={i} className="flex items-center justify-center">
+                <img src={s.trim()} alt={`Grid item ${i}`} className="w-full h-auto object-contain border border-hero-accent/30 bg-primary-background" />
+              </div>
+            ))}
+          </div>
+          {caption && (
+            <figcaption className="mt-3 text-micro-tag text-tertiary-text uppercase tracking-widest text-center w-full">{caption}</figcaption>
+          )}
+        </figure>
+      );
+    }
+    const isSmallImg = src?.includes('IEEExIIT3.png');
+    return (
+      <figure className={`w-full my-6 flex flex-col items-center justify-center ${isSmallImg ? 'max-w-[70%] md:max-w-[45%] mx-auto' : ''}`}>
+        <img src={src} alt={alt} className="w-full h-auto object-contain border border-hero-accent/30 bg-primary-background" />
+        {alt && alt !== 'Image' && alt !== 'grid-3' && !alt.startsWith('alt') && (
+          <figcaption className="mt-3 text-micro-tag text-tertiary-text uppercase tracking-widest text-center w-full">{alt}</figcaption>
+        )}
+      </figure>
+    );
+  }
 });
 
 const CustomGithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -291,6 +315,26 @@ export default function ProjectsPage() {
                             ))}
                           </div>
 
+                          {(selectedProject.liveUrl || selectedProject.githubUrl || selectedProject.figmaUrl) && (
+                            <div className="flex flex-wrap gap-3 mt-4">
+                              {selectedProject.liveUrl && (
+                                <a href={selectedProject.liveUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-hero-accent text-primary-background text-micro-tag hover:opacity-80 transition-opacity border border-hero-accent font-bold uppercase tracking-widest">
+                                  <ExternalLink size={16} /> View Live
+                                </a>
+                              )}
+                              {selectedProject.githubUrl && (
+                                <a href={selectedProject.githubUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-hero-accent text-primary-background text-micro-tag hover:opacity-80 transition-opacity border border-hero-accent font-bold uppercase tracking-widest">
+                                  <CustomGithubIcon className="size-4" /> GitHub <ExternalLink size={14} className="ml-1" />
+                                </a>
+                              )}
+                              {selectedProject.figmaUrl && (
+                                <a href={selectedProject.figmaUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-hero-accent text-primary-background text-micro-tag hover:opacity-80 transition-opacity border border-hero-accent font-bold uppercase tracking-widest">
+                                  <CustomFigmaIcon className="size-4" /> Figma <ExternalLink size={14} className="ml-1" />
+                                </a>
+                              )}
+                            </div>
+                          )}
+
                         </motion.div>
                       </div>
 
@@ -323,6 +367,11 @@ export default function ProjectsPage() {
                           </div>
                         ))}
                       </div>
+                    )}
+
+                    {(!selectedProject.keyResults || selectedProject.keyResults.length === 0) &&
+                      (selectedProject.problemStatement || selectedProject.architecture || selectedProject.methodology || selectedProject.challenges || selectedProject.techStack || selectedProject.impactsAndKeyTakeaways) && (
+                      <div className="w-full border-t border-hero-accent/20" />
                     )}
 
                   {/* New detailed sections */}
@@ -390,29 +439,7 @@ export default function ProjectsPage() {
                     </motion.div>
                   )}
                   
-                  {/* Action Buttons */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="flex flex-wrap gap-4 pt-8 border-t border-hero-accent/20"
-                  >
-                    {selectedProject.liveUrl && (
-                      <a href={selectedProject.liveUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-6 py-3 bg-hero-accent text-primary-background text-micro-tag hover:opacity-80 transition-opacity border border-hero-accent font-bold uppercase tracking-widest">
-                        <ExternalLink size={16} /> View Live Project
-                      </a>
-                    )}
-                    {selectedProject.githubUrl && (
-                      <a href={selectedProject.githubUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-6 py-3 bg-transparent text-secondary-text border border-hero-accent hover:bg-hero-accent/10 transition-colors text-micro-tag uppercase tracking-widest">
-                        <CustomGithubIcon className="size-4" /> GitHub Repository
-                      </a>
-                    )}
-                    {selectedProject.figmaUrl && (
-                      <a href={selectedProject.figmaUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-6 py-3 bg-transparent text-secondary-text border border-hero-accent hover:bg-hero-accent/10 transition-colors text-micro-tag uppercase tracking-widest">
-                        <CustomFigmaIcon className="size-4" /> Figma File
-                      </a>
-                    )}
-                  </motion.div>
+
                 </div>
                 </div>
               </motion.div>
