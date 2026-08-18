@@ -71,13 +71,8 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
       className="w-full bg-transparent font-sans px-8 sm:px-12 md:px-24 lg:px-40"
       ref={containerRef}
     >
-      <div className="max-w-7xl mx-auto min-h-[75vh] flex flex-col justify-center text-center">
-        <h2 className="text-display-hero text-hero-accent mb-4">
-          The Journey
-        </h2>
-        <p className="text-body-prose text-tertiary-text max-w-2xl mx-auto">
-          A chronological timeline of my education and professional experience.
-        </p>
+      <div className="hidden">
+        {/* Removed duplicate The Journey header */}
       </div>
 
       <div ref={ref} className="relative max-w-2xl mx-auto pb-20">
@@ -91,7 +86,7 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
             <div
               key={index}
               ref={index === 0 ? firstIconRef : index === data.length - 1 ? lastIconRef : null}
-              className="relative w-full flex flex-col md:flex-row md:justify-center mt-24 md:mt-32 group"
+              className={`relative w-full flex flex-col md:flex-row md:justify-center group ${index === 0 ? "mt-0" : "mt-24 md:mt-32"}`}
             >
               {/* Marker */}
               <div

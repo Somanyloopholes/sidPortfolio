@@ -29,7 +29,7 @@ export default function HomePage(): React.JSX.Element {
             <p className="text-statement-mono text-secondary-text whitespace-pre-wrap leading-relaxed">
               I'm Sid, a software engineer in Chicago who loves building things. I've worked across VR headsets, encrypted machine learning, and more recently AI, design systems, and UI/UX.
               <br />
-              Always curious, always shipping.
+              <span className="text-hero-accent">Always curious, always shipping.</span>
             </p>
           </div>
 
