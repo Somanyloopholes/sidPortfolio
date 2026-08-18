@@ -64,7 +64,7 @@ export default function ExperiencePage() {
     <section className="flex min-h-[calc(100vh-3.5rem)] w-full flex-col items-center justify-start pt-0 pb-24 px-4 md:px-8 lg:px-12">
       <div className="w-full flex flex-col gap-6">
         {/* Header Section */}
-        <div className="w-full max-w-5xl mx-auto px-8 sm:px-12 md:px-24 lg:px-40">
+        <div className="w-full max-w-5xl mx-auto px-8 sm:px-12 md:px-24 lg:px-40 mb-[15vh] md:mb-[25vh]">
           <div className="w-full max-w-2xl mx-auto border border-hero-accent bg-primary-background py-2 px-4 md:py-4 md:px-6 flex flex-col items-center justify-center text-center">
             <h1 className="font-mono text-[32px] leading-[36px] md:text-[48px] md:leading-[56px] font-semibold text-hero-accent tracking-wide">
               The Journey so far
