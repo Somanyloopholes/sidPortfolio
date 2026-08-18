@@ -63,11 +63,51 @@ export default function Dock() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [isMobile, setIsMobile] = React.useState(
+    typeof window !== "undefined" ? window.innerWidth < 640 : false
+  );
+  const [scale, setScale] = React.useState(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 640) {
+      return Math.min(1.4, (window.innerWidth - 32) / 270);
+    }
+    return 1;
+  });
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      const isMob = width < 640;
+      setIsMobile(isMob);
+      if (isMob) {
+        // Native width of the dock on mobile is ~270px. Scale it to fit the screen width leaving 32px margin.
+        const desiredWidth = width - 32;
+        setScale(Math.min(1.4, desiredWidth / 270));
+      } else {
+        setScale(1);
+      }
+    };
+    
+    // Add event listener
+    window.addEventListener("resize", handleResize);
+    
+    // Call handler right away so state gets updated with initial window size
+    handleResize();
+    
+    // Remove event listener on cleanup
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
-    <div className="fixed bottom-2 md:bottom-8 left-1/2 z-50 -translate-x-1/2 w-auto flex justify-center scale-90 sm:scale-100 origin-bottom">
+    <div 
+      className="fixed bottom-4 md:bottom-8 left-1/2 z-50 origin-bottom flex justify-center"
+      style={{ 
+        transform: `translateX(-50%) scale(${isMobile ? scale : 1})`,
+        width: "max-content"
+      }}
+    >
       <MotionDock 
         panelHeight={48} 
-        magnification={80}
+        magnification={isMobile ? 40 : 80}
         distance={100}
         className="items-center justify-center rounded-none bg-primary-background border border-hero-accent shadow-2xl dark:bg-primary-background gap-1 sm:gap-3 px-1 sm:px-2"
       >

@@ -90,11 +90,11 @@ export default function ContactCard({ className = "" }: ContactCardProps) {
           className="z-20 flex flex-col items-center justify-center absolute inset-0 pointer-events-none"
           style={{ transform: isMobile ? "none" : "translateZ(60px)" }}
         >
-          <div className="flex flex-col items-center gap-0 -space-y-1 mt-[-2rem] md:mt-0">
-            <h2 className="text-section-heading md:text-section-heading text-hero-accent uppercase pointer-events-auto">
+          <div className="flex flex-col items-center gap-1 md:gap-0 md:-space-y-1">
+            <h2 className="font-mono text-[24px] leading-[32px] font-semibold md:text-section-heading text-hero-accent uppercase pointer-events-auto text-center">
               SIDDHARTH GEDDAM
             </h2>
-            <p className="text-sub-heading text-secondary-text pointer-events-auto">
+            <p className="font-mono text-[18px] leading-[24px] font-medium md:text-sub-heading text-secondary-text pointer-events-auto text-center">
               Software engineer
             </p>
           </div>

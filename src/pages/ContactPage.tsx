@@ -3,7 +3,7 @@ import ContactCard from "../Components/ContactCard";
 
 export default function ContactPage(): React.JSX.Element {
   return (
-    <section className="flex min-h-[calc(100vh-3.5rem)] w-full items-center justify-center p-4">
+    <section className="flex flex-1 w-full items-center justify-center p-4 pb-24 md:pb-32">
       <ContactCard />
     </section>
   );

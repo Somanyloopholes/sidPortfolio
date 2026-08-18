@@ -7,7 +7,7 @@ export interface TechStackItem {
   name: string;
   category: string;   // e.g. "Engine", "Language", "XR / Hand Tracking", "Rendering", "Platform"
   version?: string;
-  note?: string;       // sparse — only real caveats, not a note on every item
+  note?: string;       // sparse  only real caveats, not a note on every item
 }
 
 export interface KeyResult {
@@ -20,7 +20,7 @@ export interface Project {
   id: string;
   title: string;
   shortDescription: string;   // card view only
-  coverImage?: string;         // card view — bento tile image
+  coverImage?: string;         // card view  bento tile image
   skills: string[];           // card/quick-scan tags
   role?: string;
   problemStatement?: string;
@@ -31,7 +31,7 @@ export interface Project {
   keyResults?: KeyResult[];
   impactsAndKeyTakeaways?: string;
   fullDescription?: string;   // legacy
-  media: string[];            // full case study — gallery images/screenshots
+  media: string[];            // full case study  gallery images/screenshots
   githubUrl?: string;
   liveUrl?: string;
   figmaUrl?: string;
@@ -165,7 +165,7 @@ TypeScript is configured in strict mode, with \`noUnusedLocals\`, \`noUnusedPara
     impactsAndKeyTakeaways: `Building the transition and data layers first, before any content existed, paid off. Every new page and case study since has slotted into a structure that was already there instead of needing its own one-off logic. The biggest lesson was around motion specifically: reaching for Framer Motion's raw hooks instead of its animation presets took more upfront tuning, but it gave a lot more control over how the tilt, the scroll tracking, and the dock magnification actually feel, and that matters more on a portfolio than almost anywhere else. I'd make the same tradeoff again: hand-write the pieces that need to feel exact, and only reach for a library when the problem is genuinely generic.`,
 
     media: [
-      // TODO: screenshots/gifs — dock magnification, contact card tilt, timeline scroll, case-study modal
+      // TODO: screenshots/gifs dock magnification, contact card tilt, timeline scroll, case-study modal
     ],
 
     githubUrl: "https://github.com/Somanyloopholes/sidPortfolio",
@@ -230,7 +230,7 @@ This wasn't my first real pass at the visual direction, either. I built the site
       {
         name: "Figma Variables",
         category: "Design Tokens",
-        note: "flat, kebab-case naming — primary-bg, secondary-text, tertiary-text, hero-accent, surface-dock",
+        note: "flat, kebab-case naming primary-bg, secondary-text, tertiary-text, hero-accent, surface-dock",
       },
       {
         name: "Figma MCP",
@@ -264,21 +264,32 @@ This wasn't my first real pass at the visual direction, either. I built the site
 
 Learning the ASL alphabet and numbers usually means a 2D app or a YouTube tutorial. Both can show you the correct hand shape, but neither can tell you whether the shape you're actually making matches it. That's the gap I wanted to close. Quest's hand tracking let me skip controllers entirely and have someone practice with their actual hands, getting feedback the moment they get a sign right instead of just guessing and moving on.`,
     architecture:
-      `**Runtime:** The app sits on top of OpenXR, which is the runtime actually doing the hand tracking underneath everything. Meta XR SDK sits one layer above that, exposing hand tracking as an OpenXR extension rather than replacing it (the Oculus XR Plugin is bundled in the package too, but it's not the active loader, just leftover baggage from the SDK install).
+      `**Input and recognition layer:** OpenXR (the standard runtime API for XR hardware) feeds raw hand joint data through Meta XR SDK and Unity XR Hands. Rather than write custom joint-angle matching, I built on Unity XR Hands' own sample evaluator, which checks a bound hand shape and orientation constraint against live tracking data. Two evaluator instances run independently, one per hand, each polling for a match every 0.1 seconds and requiring the pose to be held for at least 0.2 seconds before it even reports a gesture as "performed." My own confirmation logic adds another 0.8 seconds on top of that, so a sign has to be held steadily for roughly a second total before the app counts it as a match two layers of noise filtering rather than one.
 
-**Data layer:** Above that runtime, the app's content is organized as three layers of data, each one built on the layer below it. A \`Hand Shape\` asset is the bottom layer: one per sign, 36 total, storing per-finger curl and spread conditions with tolerance ranges, so a real hand doesn't have to match the shape pixel-perfectly. A \`PoseWithImage\` asset wraps one hand shape together with its reference image and text description, basically one flashcard. A single \`PoseLibrary\` asset holds all 36 of those flashcards in one array the rest of the app reads from. Because everything here is data rather than code, adding a 37th sign later would just mean creating new assets, no scripts to touch.
+**Runtime pose rebinding:** The evaluator component is built around a single pose assigned once in the Inspector the intended use is one evaluator per gesture. Wiring up 36 separate evaluators per hand wasn't a workable scene design, so I kept exactly two evaluator instances, one per hand, and rebind their target pose at runtime instead. Selecting a new sign clears active detection state, cancels any confirmation in progress, and injects the new pose asset into both evaluators before refreshing the UI. Since the SDK doesn't expose a public way to swap that target after the fact, the injection reaches into the evaluator's private internals directly and re-runs its own setup logic so it treats the new pose as if it had been assigned from the start. That keeps evaluator count constant no matter how many signs the library holds, at the cost of depending on SDK internals that aren't part of its public contract an SDK update could silently break this without warning.
 
-**Gameplay loop:** Two controllers run the actual gameplay. \`LearnModeController\` is the higher-level one: it picks a random flashcard from the library, keeps score in Quiz mode, and makes sure the same sign never repeats twice in a row. \`DynamicGestureController\` does the harder job of actually checking whether your hand matches the sign on screen, and it's where the interesting engineering problem lives.
+**Two-hand concurrency:** Left and right hands report detection independently and asynchronously, so I track each hand's active state with its own counter rather than a single shared flag. A confirmation timer starts only once per attempt, cancels if the pose is lost, and only fully resets once both hands report inactive which stops one hand's gesture ending from cancelling a match the other hand is still correctly holding, and stops the same match from firing twice while a sign is held.
 
-**The reflection trick:** Meta XR SDK ships a component called \`StaticHandGesture\` that checks a hand against one specific pose, set once in the Unity editor with no way to change it while the app is running. That's fine for two or three fixed gestures wired up by hand, but it doesn't scale to 36 signs that all need to swap in and out as the user cycles through them. Rather than build 36 separate copies of that component, I used C# reflection to reach into its private fields (\`m_HandShapeOrPose\`, \`m_HandPose\`) and re-run its own internal setup methods (\`OnEnable\`, \`Initialize\`), which lets me swap which pose a single evaluator is checking for at runtime. One reusable component ends up doing the job of 36.
+**Recognition-to-session boundary:** The recognition layer's only output is a single event it never touches score, mode state, or which sign comes next. A separate controller owns all of that: it listens for the event, decides whether to increment score (only in Quiz mode), and picks the next prompt. Keeping those two concerns on opposite sides of one event meant I could change scoring rules or add a new mode later without touching any hand-tracking code.
 
-**Putting it together:** From there the loop is event-driven. The SDK fires events when a gesture starts and stops matching, \`DynamicGestureController\` counts how many of the five finger conditions are currently satisfied, and once a match holds steady for 0.8 seconds straight, it fires its own \`PoseMatched\` event. That triggers the visual payoff (the border cubes around the hand swap to a glowing material), bumps the score if you're in Quiz mode, and hands control back to \`LearnModeController\` to pick the next sign.`,
+**Content layer:** Signs are represented as ScriptableObjects (Unity's serialized data-container asset type) a library asset holds an ordered list of entries, each pairing a hand-shape/orientation definition with a reference image and description. Adding a sign means authoring a new asset, not writing new code or wiring up a new scene object.
+
+* Quest hand tracking
+* Left/Right pose evaluators
+* Hand shape + orientation match
+* Gesture performed / ended events
+* Per-hand counters, hold timer
+* Match confirmed event
+* Session controller: score, mode, next prompt
+* Pose library: next sign asset`,
     methodology:
-      `I built this sign by sign instead of trying to solve gesture recognition as one big abstract problem. Each hand shape started as a rough tolerance range, and I tightened it over repeated rounds of putting the headset on, making the sign myself, and adjusting the curl and spread thresholds per finger until it stopped triggering on close-but-wrong shapes and stopped missing correct ones. Signs like P, G, and H needed an extra condition on top of finger shape, since what actually distinguishes them is which way the palm is facing, not just which fingers are curled.
+      `I built this sign by sign rather than trying to solve gesture recognition in the abstract, tightening each hand shape's tolerance through repeated rounds of putting the headset on, making the sign myself, and adjusting curl and spread thresholds per finger until it stopped triggering on close-but-wrong shapes and stopped missing correct ones. Signs like P, G, and H needed an added orientation condition on top of finger shape, since they're distinguished by palm direction more than which fingers are curled.
 
-I also ran a small, informal round of testing: 4 to 5 people trying the app cold. The main thing I was checking for was tolerance settings that felt fine to me (since I'd been making these signs myself for weeks) but were actually too strict or too loose for someone seeing the correct hand position for the first time.
+Rather than write hand-tracking math from scratch, I built on Unity XR Hands' sample evaluator for the low-level joint and pose matching, and put my own work into the parts that needed product-specific behavior: runtime pose rebinding, two-hand concurrency handling, hold-based confirmation, and the Learn/Quiz session logic. That split meant I wasn't reinventing hand-tracking geometry, but it also meant the rebinding layer depends on SDK internals that were never meant to be touched from outside a tradeoff I made deliberately, not one I discovered after the fact.
 
-Early on I also built a custom Unity editor for \`PoseSelectorRuntime\`, the component responsible for picking which pose asset a given scene object represents. Wiring up all 36 pose references by hand through Unity's default inspector was slow enough that I kept making mistakes, so I replaced it with a dropdown populated straight from the pose library, which made authoring and testing each sign a lot faster.`,
+I also built a custom Unity Editor tool early on a dropdown populated from the pose library specifically because wiring up dozens of pose references through the default Inspector was slow enough that I kept making mistakes. That sped up authoring and testing each sign individually before it went into the randomized rotation.
+
+I ran a small round of informal testing four to five people trying the headset cold mostly to catch tolerance settings that felt fine to me, since I'd been making these signs myself for weeks, but were too strict or too loose for someone encountering the hand position for the first time. Of the 36 signs implemented, 6 don't reliably register largely the ones that depend on hand motion rather than a single static shape, which this system wasn't built to detect. There's no automated test suite, CI pipeline, or profiling data in the project validation here was manual and iterative rather than instrumented, a reasonable scope for a solo two-month build but a clear next step if I extended it.`,
     challenges: [
       {
         title: "Choosing the right layer of the Meta stack for gesture matching",
@@ -310,13 +321,13 @@ Early on I also built a custom Unity editor for \`PoseSelectorRuntime\`, the com
       { name: "Unity", category: "Engine", version: "2022.3.60f1 (LTS)" },
       { name: "C#", category: "Language" },
       { name: "OpenXR", category: "XR Runtime", version: "1.14.3", note: "Active loader for the whole XR stack" },
-      { name: "Meta XR SDK", category: "XR / Hand Tracking", version: "74.0.3", note: "Feature layer on top of OpenXR — provides hand tracking" },
+      { name: "Meta XR SDK", category: "XR / Hand Tracking", version: "74.0.3", note: "Feature layer on top of OpenXR provides hand tracking" },
       { name: "Unity XR Hands", category: "XR / Hand Tracking", version: "1.5.1" },
       { name: "Unity XR Interaction Toolkit", category: "XR / Interaction", version: "2.6.4" },
       { name: "Universal Render Pipeline (URP)", category: "Rendering", version: "14.0.12" },
       { name: "Vulkan", category: "Rendering" },
       { name: "TextMeshPro", category: "UI", version: "3.0.9" },
-      { name: "Oculus XR Plugin", category: "Platform", note: "Bundled via com.meta.xr.sdk.all, but not the active loader — vestigial" },
+      { name: "Oculus XR Plugin", category: "Platform", note: "Bundled via com.meta.xr.sdk.all, but not the active loader vestigial" },
       { name: "Android (Quest OS)", category: "Platform", note: "Min SDK 32" }
     ],
     keyResults: [
@@ -337,7 +348,7 @@ Early on I also built a custom Unity editor for \`PoseSelectorRuntime\`, the com
     id: "spatial-inequality-cook-county",
     title: "Neighborhood Evolution in Cook County",
     shortDescription:
-      "A decade-long spatial network analysis tracking how Cook County neighborhoods shift between seven distinct typologies — built with KNN similarity graphs and Louvain community detection instead of fixed administrative boundaries.",
+      "A decade-long spatial network analysis tracking how Cook County neighborhoods shift between seven distinct typologies built with KNN similarity graphs and Louvain community detection instead of fixed administrative boundaries.",
     coverImage: "/CookCountyCover.png",
     skills: [
       "R",
@@ -350,21 +361,34 @@ Early on I also built a custom Unity editor for \`PoseSelectorRuntime\`, the com
 
     problemStatement: `![grid-3: result of the clustering of all the communities and municipalities for the years 2013, 2018 and 2023](/screenshots/cookCounty1.1.png,/screenshots/cookCounty1.2.png,/screenshots/cookCounty1.3.png)\n\nNeighborhood-level inequality in the Chicago metro area is usually studied through fixed administrative boundaries like Community Areas, and those boundaries can mask change that happens gradually and doesn't respect a line on a map. We built similarity-based network graphs of Census block groups instead, using multivariate sociodemographic features to connect each block group to the ones most like it, then applied Louvain community detection to surface neighborhood typologies that emerge from the data itself rather than from administrative lines. Tracking how individual block groups move between those typologies across three time periods exposes gentrification, decline, and stabilization patterns that boundary-based analysis tends to miss.`,
 
-    architecture: `**Data collection:** The pipeline starts by pulling 24 variables from the Census Bureau's American Community Survey (ACS), plus tract-level poverty data pulled separately since it isn't available at the block group level. A block group is the smallest geography the Census publishes detailed data for, typically a few hundred to a few thousand people, small enough to capture real neighborhood-level variation instead of averaging it away. Data comes in for three years: 2013, 2018, and 2023.
+    architecture: `**Data acquisition:** The pipeline pulls ACS 5-year estimates for Cook County block groups (Illinois FIPS 17, Cook County FIPS 031) across three snapshot years, 2013, 2018, and 2023, plus tract-level poverty estimates pulled separately since poverty isn't available at the block-group level in the ACS.
 
-**Building the spatial base:** Those ACS numbers get joined to 2020 TIGER/Line block group boundaries, the Census Bureau's official geographic shape files, so every year of data sits on the same consistent map instead of drifting as boundaries get redrawn between census cycles. From the raw ACS counts we compute 11 derived ratios (poverty rate, percent renter, bachelor's-plus attainment, and others), each with a safe-division check so a block group with zero population doesn't cause a divide-by-zero error downstream. Chicago crime counts and CTA rail accessibility get layered in next, crime through a spatial join that counts incidents falling inside each block group's boundary, rail access through a distance matrix measuring how far each block group's center sits from the nearest station.
+**Shared geometry base:** Rather than pulling separate boundaries per year, I fetch a single set of 2020 TIGER/Line block-group boundaries, reproject to a meters-based Illinois state-plane coordinate system (EPSG:26971) for accurate distance math, and reuse that same geometry across all three analysis years. That keeps year-over-year comparisons anchored to a fixed spatial unit, at the cost of not reflecting how block-group boundaries themselves shifted over the decade.
 
-**Aggregation and visualization:** Block groups get aggregated up to Community Areas (Chicago's official neighborhoods) and Municipalities (for suburban Cook County), weighted by population so a dense block group counts more than a sparse one. Every variable gets mapped as a choropleth, a map where each region is shaded by its value for that variable, alongside a histogram showing the same data as a distribution. That runs for all three years individually, then again as percent-point change maps between year pairs, so you can see not just where values are high, but where they moved the most.
+**External enrichment:** Crime incidents are spatially joined to block groups with a point-in-polygon test, and CTA rail accessibility is computed as centroid-to-station distance, with counts of stations within 400m and 800m of each block group's centroid. Centroid distance is a simplification: it's far cheaper to compute than network-distance routing, but it can understate or overstate access for large or irregularly shaped block groups.
 
-**Network construction and clustering:** This is the core of the analysis. For each year, we take 8 socioeconomic and housing variables per block group and build a k-nearest-neighbors graph, a network where each block group connects to the 8 other block groups most similar to it across those variables, regardless of whether they're geographically adjacent. Louvain community detection, a network science algorithm that finds tightly connected clusters within a graph, runs on top of that network to surface groups of block groups that behave like a shared neighborhood type. We ran this independently for each of the three years, then mapped the raw cluster outputs onto 7 consistent, human-readable labels, things like Elite & Wealthy, Working-Class Transitional, and High-Poverty, so the same neighborhood type can be tracked as it changes over the decade instead of getting relabeled from scratch every year.
+**Feature preparation and clustering:** Eight variables, Hispanic population share, share with a bachelor's degree or higher, median home value, median age, median household income, crime count, unemployment rate, and poverty rate, are z-score normalized, then used to build a full Euclidean distance matrix and a k=8 nearest-neighbor graph, symmetrized to remove duplicate edges. Louvain community detection runs independently on each year's graph. Block groups with missing data are dropped rather than imputed, which avoids inventing values at the cost of shifting which block groups are actually represented in a given year's clustering.
 
-**Longitudinal tracking:** The final stage builds transition matrices, tables showing how many block groups moved from each meta-cluster to each other one between year pairs, and turns those into alluvial flow diagrams, the kind of chart where colored bands flow from one category into another across time, so the whole decade of change reads as one continuous picture instead of three disconnected snapshots.`,
+**Aggregation and interpretation:** Block groups also feed a separate branch that aggregates them up to Community Areas and Municipalities using population-weighted averages, feeding the cluster-profile tables and the alluvial flow diagrams. In the current codebase, this aggregation step and the scripts that build those profiles and flow diagrams expect different intermediate file formats than what's actually produced, so the block-group-level clustering pipeline is the fully reproducible path; the Community-Area-level interpretation outputs are something I still need to confirm the generation path for before describing them as clean end-to-end automation.
 
-    methodology: `![Alluvial diagram showing neighborhood typology transitions](/screenshots/cookCounty2.png)\n\nThe 8 variables that go into clustering (Hispanic population share, bachelor's-plus attainment, median home value, median age, median household income, crime count, unemployment rate, and poverty rate) get z-score normalized first, meaning every variable is rescaled based on how far each value sits from the average. Without that step, a variable like median home value, which can range into the hundreds of thousands, would dominate the distance calculation over something like unemployment rate, which lives in the single digits as a percentage.
+**Gap in current commit**
+* ACS + tract poverty pull
+* Shared 2020 block-group geometry
+* Crime join + rail distance
+* 8-variable feature matrix
+* Z-score normalize
+* Euclidean k=8 graph
+* Louvain community detection
+* Year-specific meta-cluster mapping
+* Choropleths, change maps, cluster maps
+* CA/Municipality aggregation
+* Cluster profiles + alluvial flow`,
 
-From there we compute the distance between every pair of block groups and keep each one's 8 closest matches, which becomes the k-nearest-neighbors graph. We symmetrize the edges afterward, since a block group being one of your 8 closest matches doesn't automatically mean you're one of theirs, and an undirected graph needs that relationship to run both ways.
+    methodology: `![Alluvial diagram showing neighborhood typology transitions](/screenshots/cookCounty2.png)\n\nFor each snapshot year, I normalize the eight-variable feature set and build the KNN graph independently, then run Louvain on that year's graph in isolation. Louvain's community IDs aren't stable between separate runs, so the same underlying neighborhood type can come out as a different raw ID in 2013, 2018, and 2023. To make the results comparable across years, I built year-specific lookup tables mapping each year's raw cluster IDs onto seven consistent meta-cluster labels, letting the same neighborhood type be tracked as it evolves rather than relabeling itself every year.
 
-Louvain runs independently on each year's graph, and that independence creates a real problem: it assigns cluster IDs arbitrarily, so cluster 3 in the 2013 run has no relationship to cluster 3 in 2018 even if they represent the same kind of neighborhood. We handled that by building year-specific lookup tables that map each year's raw cluster IDs onto the same 7 meta-cluster labels, based on comparing each cluster's actual profile (its average income, poverty rate, and so on) across years. That's what makes it possible to say a block group moved from High-Poverty to Working-Class Transitional between 2013 and 2018, instead of just reporting that it moved from cluster 4 to cluster 2.`,
+A few of the pipeline's design choices are trade-offs I made deliberately rather than the only option available: reusing a single 2020 geometry base instead of year-specific boundaries, using centroid-to-station distance instead of network routing, and dropping incomplete rows instead of imputing them. Each one trades some fidelity for a simpler, more defensible pipeline, worth naming as a real limitation rather than smoothing over.
+
+There's no CI pipeline, automated test suite, or profiling data in the project, and the repository's history is a single initial commit plus one documentation-only follow-up, so there's no evidence of iterative parameter tuning across separate commits. If the k=8 or feature-set choices went through trial and error, that happened outside version control and isn't something I can point to in the repo itself.`,
 
     challenges: [
       {
@@ -541,7 +565,7 @@ Louvain runs independently on each year's graph, and that independence creates a
     id: "confidential-ml-federated-learning",
     title: "ConfidentialML",
     shortDescription:
-      "A containerized federated learning system combining Paillier homomorphic encryption with Gaussian differential privacy, so multiple clients can jointly train a logistic regression model without the server — or any other party — ever seeing raw data or plaintext model updates.",
+      "A containerized federated learning system combining Paillier homomorphic encryption with Gaussian differential privacy, so multiple clients can jointly train a logistic regression model without the server or any other party ever seeing raw data or plaintext model updates.",
     coverImage: "/confidentialMLCover.png",
     skills: [
       "Python",
@@ -555,9 +579,33 @@ Louvain runs independently on each year's graph, and that independence creates a
 
     problemStatement: "How can multiple parties train a machine learning model together when they can't share their private data with each other and can't fully trust the server coordinating the training? That's a real constraint in regulated or adversarial settings: a group of banks that can't pool customer data across institutions for fraud detection, or allied organizations that need a shared model without exposing classified inputs to one another. ConfidentialML is a technical demonstration of an architecture for that problem, not a deployed system for either use case.",
 
-    architecture: "![Architecture](/screenshots/confidentialML1.png)\n\nThe players: A Flask server coordinates training rounds, and any number of Flask clients each hold their own private data. Everything communicates as JSON over HTTP on a Docker bridge network, meaning the whole system runs as separate containers that can talk to each other without being exposed to the outside world. Encrypted model weights move back and forth between the server and clients, but the encryption keys travel directly between clients and never touch the server at all.\n\nHomomorphic encryption: This is the property the whole design leans on. Paillier is an encryption scheme with a specific and unusual trait: you can add two encrypted numbers together and get a correctly encrypted sum, without ever decrypting either one. That means the server can combine every client's encrypted update into one combined model update while never seeing a single plaintext value.\n\nKey generation and distribution: Once enough clients register, the server randomly elects one of them as Leader. The Leader generates a 2048-bit Paillier keypair, a public key and a private key, sends the public key to the server, and shares the private key directly with the other clients. Clients that join after key generation already happened still get picked up through the Leader's key-sharing endpoint, so late joiners aren't left out.\n\nOne training round: Selected clients decrypt the current global model, train a logistic regression model from scratch on their own local data, and compute how much their local weights changed. Before sending that update anywhere, each client clips it (capping how large any single value in the update is allowed to be) and adds Gaussian noise on top, which is the actual differential privacy step, then re-encrypts the noised update with the Paillier public key and sends it to the server.\n\nAggregation without decryption: The server performs Federated Averaging, a weighted average of every client's update, directly on the encrypted values. Because of Paillier's additive property, that average comes out correctly encrypted without the server ever decrypting a single client's contribution. This repeats for a configurable number of rounds, and only at the very end does each client decrypt the final model locally to check how well it actually performs.",
+    architecture: `![Architecture](/screenshots/confidentialML1.png)\n\nEach round starts with client registration. Once a minimum of three clients have joined, the server randomly elects one as Leader. The Leader generates a 2048-bit Paillier keypair, a public/private key pair sized for that level of homomorphic encryption strength, sends only the public key to the server, and distributes the private key directly to the other clients, peer-to-peer, so it never touches the server at all.
 
-    methodology: "Each round follows a fixed lifecycle. Clients register with the server, and once a minimum number have joined, the server randomly elects a Leader. The Leader generates the Paillier keypair, keeps the private key out of the server's hands entirely, and distributes it directly to the other clients instead, with a separate path for anyone who joins late.\n\nIn each round, selected clients decrypt the current global model, train locally, clip their update, add Gaussian noise for differential privacy, re-encrypt, and send the result back. The server then aggregates everything as ciphertext arithmetic, exploiting Paillier's additive property rather than decrypting anything to average it conventionally. That's the core mechanism that makes the whole system work: privacy isn't bolted on as a separate step, it's built into how the math itself gets done.\n\nA single round's noise doesn't capture the full privacy cost of training over many rounds, since each additional round leaks a little more information even with noise added every time. We implemented Rényi Differential Privacy accounting, a method for tracking that cumulative privacy cost across rounds, so a client halts training entirely if the running total would exceed the configured privacy budget. That turns a one-shot privacy guarantee into something enforced across the whole training run.",
+In each training round, selected clients decrypt the current global model, train a logistic regression locally for 10 epochs at a learning rate of 1.0, and compute the difference between their updated weights and the model they started with. Before that update leaves the client, it goes through two privacy steps: L2 norm clipping bounds how much any single update can shift the model, and Gaussian noise is added on top for differential privacy, before the whole thing is re-encrypted with the Paillier public key.
+
+The server's job is narrower than "averaging": it collects updates from at least three clients and computes their weighted sum while they're still encrypted, exploiting the fact that Paillier ciphertexts can be added together without ever being decrypted. It sends that encrypted sum back out. The actual division, the step that turns a sum into an average, happens only after a client decrypts it locally. That split exists because the server was never designed to hold a decryption key at all, and division isn't a natural fit for the encrypted arithmetic Paillier supports the way addition is.
+
+Privacy loss doesn't reset between rounds, so we track it cumulatively using Rényi differential privacy accounting, evaluated across 10 discrete privacy orders, against a configured total epsilon budget. If a client's running privacy cost would exceed that budget, it exits rather than continuing to train.
+
+* public key
+* private key, peer-to-peer
+* Clients register
+* Leader elected
+* Leader generates Paillier keypair
+* Server
+* Other clients
+* Selected clients: decrypt, train 10 epochs
+* L2 clip + Gaussian noise
+* Re-encrypt with public key
+* Server: weighted SUM on ciphertexts
+* Clients decrypt
+* Clients divide: sum becomes average`,
+
+    methodology: `Unlike some of the other projects, this one has real commit-level evidence of iteration rather than a single initial commit. The Rényi DP accounting and the epsilon budget threshold were introduced in a dedicated commit, separate from when the Paillier key size was set to 2048 bits, and a distinct cleanup and refactoring pass happened after both of those. The pytest suite and the CI workflow were also added as their own pass, after the core cryptographic and privacy logic was already in place, which suggests testing was layered on once the design had stabilized rather than being written test-first.
+
+The default configuration only declares a single client service; running with multiple clients (up to the 5 we tested) means passing an explicit scale flag rather than something that happens automatically, worth knowing precisely since the README's framing could read as implying multiple clients out of the box.
+
+There's a pytest suite covering the cryptographic primitives and the DP formulas, and a GitHub Actions CI workflow, both confirmed present and passing when run locally against the current repo state. There's no profiling or benchmarking infrastructure, so any performance claims (memory, throughput, scaling behavior beyond 5 clients) stay outside what we can back up from the repo itself.`,
 
     challenges: [
       {
@@ -613,6 +661,26 @@ Louvain runs independently on each year's graph, and that independence creates a
         label: "Automated test suite",
         value: "24 tests",
         note: "Covers HE round-trips, homomorphism properties, DP formulas, and RDP composition; run via GitHub Actions CI",
+      },
+      {
+        label: "Target total epsilon budget",
+        value: "20.0",
+        note: "The ceiling the running privacy cost is checked against, separate from the optimal ε=2",
+      },
+      {
+        label: "Minimum clients required",
+        value: "3",
+        note: "Required both to start a round and to aggregate",
+      },
+      {
+        label: "Client sample limit",
+        value: "5,000 samples",
+        note: "With an 80/20 train/test split per client",
+      },
+      {
+        label: "Features expected",
+        value: "31 total",
+        note: "30 synthetic features plus a bias term expected by the server",
       },
     ],
 

@@ -272,7 +272,7 @@ export default function ProjectsPage() {
                   exit={{ opacity: 0, y: 20, scale: 0.95 }}
                   transition={{ type: "spring", duration: 0.5, bounce: 0 }}
                   onClick={(e) => e.stopPropagation()}
-                  className="w-full max-w-5xl mx-auto my-4 md:my-12 bg-primary-background border border-hero-accent rounded-none flex flex-col shadow-[0_0_40px_rgba(166,216,0,0.15)] overflow-hidden"
+                  className="w-full max-w-5xl mx-auto mb-4 md:mb-12 bg-primary-background border border-hero-accent rounded-none flex flex-col shadow-[0_0_40px_rgba(166,216,0,0.15)] overflow-hidden"
                 >
                   <div className="w-full flex flex-col relative">
                     <button 

@@ -89,8 +89,9 @@ function Dock({
   const isHovered = useMotionValue(0);
 
   const maxHeight = useMemo(() => {
+    if (magnification === 40) return panelHeight;
     return Math.max(DOCK_HEIGHT, magnification + magnification / 2 + 4);
-  }, [magnification]);
+  }, [magnification, panelHeight]);
 
   const heightRow = useTransform(isHovered, [0, 1], [panelHeight, maxHeight]);
   const height = useSpring(heightRow, spring);
