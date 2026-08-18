@@ -58,7 +58,7 @@ function App() {
     <div className='flex min-h-screen w-full flex-col bg-[#141413] text-[#faf9f5] font-inter overflow-x-clip relative'>
       <PlusPatternBackground />
       <Navbar />
-      <main className='mt-5 md:mt-7 lg:mt-10 xl:mt-14 flex-1 flex w-full relative'>
+      <main className='mt-[calc(2.5rem+1vh)] flex-1 flex w-full relative'>
         <AnimatePresence mode="popLayout" custom={direction} initial={false}>
           <motion.div
             key={location.pathname}
