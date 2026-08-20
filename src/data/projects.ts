@@ -158,6 +158,7 @@ TypeScript is configured in strict mode, with \`noUnusedLocals\`, \`noUnusedPara
       },
       { name: "react-markdown", category: "Content Rendering", version: "10.1.0" },
       { name: "shadcn/ui", category: "Component Primitives", version: "4.13.0" },
+      { name: "Vercel", category: "Hosting" },
     ],
 
 
@@ -184,9 +185,13 @@ TypeScript is configured in strict mode, with \`noUnusedLocals\`, \`noUnusedPara
     ],
     role: "Solo designer: visual identity, token architecture, and the Figma-to-code handoff structure.",
 
-    problemStatement: `Most portfolio sites default to the same palette: near-black background, a blue accent, done. I wanted something that read as a deliberate identity instead of a default, without tipping into the kind of maximalism that stops being legible. The harder version of the problem was that the system couldn't just work on one page. It needed to survive being pulled onto a LinkedIn banner, rendered inside a GitHub README in both light and dark themes, and even reproduced on actual hardware (my Windows accent color and my keyboard RGB are both set to match it now). A system that only works on one background isn't really a system.`,
+    problemStatement: `![Designing the projects page in Figma with tokens](/PortfolioDesign1.png)
 
-    architecture: `**Color:** Five Figma variables, which are named color values you define once and reuse everywhere instead of retyping a hex code on every element. They're kebab-cased (hyphenated, like \`primary-bg\`) so multi-word names stay readable: \`primary-bg\` (#131314), \`secondary-text\` (#F4F4F5), \`tertiary-text\` (#A1A1AA), \`hero-accent\` (#A6D800), and \`surface-dock\`, a 15% tint of the background used specifically for the dock's glass-like surface. Four neutrals and exactly one accent color. That restraint is the actual design decision, not a limitation.
+Most portfolio sites default to the same palette: near-black background, a blue accent, done. I wanted something that read as a deliberate identity instead of a default, without tipping into the kind of maximalism that stops being legible. The harder version of the problem was that the system couldn't just work on one page. It needed to survive being pulled onto a LinkedIn banner, rendered inside a GitHub README in both light and dark themes, and even reproduced on actual hardware (my Windows accent color and my keyboard RGB are both set to match it now). A system that only works on one background isn't really a system.`,
+
+    architecture: `![Overview of all the tokens used](/portfolioDesign2.png)
+
+**Color:** Five Figma variables, which are named color values you define once and reuse everywhere instead of retyping a hex code on every element. They're kebab-cased (hyphenated, like \`primary-bg\`) so multi-word names stay readable: \`primary-bg\` (#131314), \`secondary-text\` (#F4F4F5), \`tertiary-text\` (#A1A1AA), \`hero-accent\` (#A6D800), and \`surface-dock\`, a 15% tint of the background used specifically for the dock's glass-like surface. Four neutrals and exactly one accent color. That restraint is the actual design decision, not a limitation.
 
 **Type:** A role-based scale instead of a size-based one, meaning each style is named for what it does (\`display-hero\`, \`section-heading\`, \`sub-heading\`, \`title-small\`, \`body-prose\`, \`body-emphasis\`, \`micro-tag\`, \`statement-mono\`) rather than its pixel value. There's a parallel mobile scale too, and it recalculates line height and size per style rather than just shrinking everything down by the same percentage.
 
@@ -194,13 +199,15 @@ TypeScript is configured in strict mode, with \`noUnusedLocals\`, \`noUnusedPara
 
 **Handoff:** The path from design to code runs Figma to Figma MCP to Antigravity. Figma MCP is a bridge that lets an outside tool read a Figma file's variables, styles, and layout structure directly, instead of a developer manually describing the design in a prompt. Antigravity is the tool on the other end that turns that structure into actual code. The free tier of Figma MCP only allows 6 tool calls a month, which rules it out as something you'd query continuously while designing. So I built the workflow around that limit instead of fighting it: pull the full variable and style set once, save it directly into the site's CSS as reusable style variables, and treat that file as the source of truth from then on. I only go back to Figma MCP when the token set itself actually changes.`,
 
-    methodology: `I settled on the color scheme before I built a single token. The five-variable, one-accent structure came after that decision, not before it. That ordering mattered, since it meant the system was built to express a choice I'd already made, instead of being assembled first and colored in afterward.
+    methodology: `![Multiple iterations of the contact page](/screenshots/portfolioDesign3.png)
 
-The palette itself pushes back against the usual portfolio defaults. I wanted a strict monotone base with exactly one accent doing all the work, in the spirit of how accessible color-pairing tools like randoma11y treat contrast: deliberately, not decoratively. I paired that with a willingness to let the one accent actually be loud, which is closer to what I took from Bungie's *Marathon* art direction, vibrant, graphic, and unapologetic about being the focal point of every frame it shows up in. The result is a system that's quiet everywhere except the one place it isn't.
+It took me a lot of experimentation and prototyping to settle on the final design. I decided on the color scheme first before I built a single token. The 3-tone, one-accent structure came after that decision, not before it. That ordering mattered, since it meant the system was built to express a choice I'd already made, rather than being assembled first and coloured in afterwards.
+
+[randoma11y](https://randoma11y.com) was the single biggest influence on this system, and I mean that specifically, not as a passing reference. It's a tool that generates random accessible color pairings and shows their contrast ratios as you go. However, what inspired me more than the colour schemes it generated was the website's design itself. There was something so eye-catching and bold about the 90-degree bold wireframe style design that permeated throughout the whole website. That was the single biggest inspiration behind the 3-tone, one-accent structure here. The rebooted Marathon was a smaller, more specific influence on top of that. I looked at Bungie's key art and UI for it and learnt one thing from it directly: letting the one accent color be loud, vibrant, and unapologetic about being the focal point, the same way Marathon's palette refuses to sit quietly in a frame.
 
 Typography followed the same logic. Geist Mono carries the bold display moments, the same instinct behind Palantir using a heavy, technical-feeling font for its hero type. Inter handles body copy, where actual readability matters more than character. JetBrains Mono is reserved for anything meant to read as code or a system statement.
 
-This wasn't my first real pass at the visual direction, either. I built the site out in glassmorphism first and got far enough to actually sit with it before realizing it read as generic, a style every other portfolio was already doing rather than a specific choice of my own. I killed that direction and rebuilt around the current graphic, typography-led system instead of trying to salvage what I had.`,
+Getting here took a lot more prototyping than the final system suggests. I went through several passes on the contact card alone, which are documented in the corresponding Figma doc. At one point I had an entire alternate direction built out: glassmorphism, translucent panels, blur, the whole aesthetic, and got far enough into it to actually sit with it for a while. It looked fine in isolation, but it read as generic, the same visual language most portfolio sites default to. I scrapped that direction completely and rebuilt from the ground up around the current graphic, typography-led system, rather than trying to patch or salvage what I already had.`,
 
     challenges: [
       {
@@ -217,11 +224,6 @@ This wasn't my first real pass at the visual direction, either. I built the site
         title: "Working around the Figma MCP free-tier cap",
         description:
           "A 6-tool-call-per-month cap makes it impossible to treat Figma MCP as something you query on demand while designing. I restructured the workflow around that limit instead of working against it: one deliberate full export, saved into the site's CSS, treated as canonical until the token set itself actually changes.",
-      },
-      {
-        title: "Making one identity hold across four different surfaces",
-        description:
-          "The same five-token, one-accent system has to read correctly across four very different places: the site itself, where I have full control over the background; a LinkedIn banner, locked to a fixed aspect ratio and sitting in a feed next to everything else; a GitHub README, rendered in both GitHub's light and dark themes, outside my control; and physical hardware, my Windows accent color and keyboard RGB, with far less color accuracy than a browser gives you. Keeping the system simple, one accent, four neutrals, was what made it portable across constraints that were this different from each other in the first place.",
       },
     ],
 
@@ -242,7 +244,7 @@ This wasn't my first real pass at the visual direction, either. I built the site
       { name: "Geist Mono / Inter / JetBrains Mono", category: "Typography" },
     ],
 
-    impactsAndKeyTakeaways: `Designing for four surfaces instead of one forced a kind of discipline that designing for a single page never would have. A system that only survives on one background isn't really a system, it's just a page. The decision that mattered most wasn't any single color or font choice. It was killing the glassmorphism direction early instead of polishing something that was fundamentally the wrong starting point. On the handoff side, the clearest lesson was that Antigravity could only rebuild what the Figma file actually made legible. Named variables, auto layout structure, and a genuinely small token set did more for the Figma-to-code pipeline than any amount of prompting would have.`,
+    impactsAndKeyTakeaways: `Designing color and type around a single decision, one quiet system with exactly one place it's allowed to be loud, ended up being more durable than picking either the fully quiet or fully loud version outright. The tension between randoma11y's restraint and Marathon's intensity is the actual throughline of the identity, not something one direction won out over. On the handoff side, the clearest lesson was that Antigravity could only rebuild what the Figma file actually made legible: named variables, auto-layout structure, and a small token set did more for the pipeline than any amount of prompting would have. The system has also made its way beyond the site itself, onto a LinkedIn banner, a GitHub README, even my Windows accent color and keyboard RGB, which has been a good, if informal, gut check that the palette holds up outside a browser.`,
 
     media: [
       // TODO: Figma variables panel, typography scale panel, project-page mockup, before/after glassmorphism comparison
