@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useLocation, useOutlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { useLenis } from 'lenis/react';
+import { Analytics } from "@vercel/analytics/react";
 import './App.css';
 import Navbar from "./Components/Navbar.tsx";
 import Dock from "./Components/Dock.tsx";
@@ -78,6 +79,7 @@ function App() {
         </AnimatePresence>
       </main>
       <Dock />
+      <Analytics />
     </div>
   )
 }
