@@ -40,21 +40,14 @@ export interface Project {
 export const skillsList = [
   "All",
   "Python",
-  "Java",
-  "JavaScript",
   "C#",
-  "C++",
   "SQL",
   "R",
   "Docker",
   "Flask",
   "Apache Kafka",
-  "REST apis",
   "Git",
   "FAISS",
-  "Scikit-learn",
-  "Pandas",
-  "Numpy",
   "RAG",
   "LLM Integration",
   "Spatial Analysis",
@@ -72,8 +65,6 @@ export const skillsList = [
   "Figma",
   "Figma MCP",
   "UI/UX",
-  "Linux",
-  "Jira",
   "Unity",
   "Meta XR SDK",
   "Unity XR SDK",
@@ -92,7 +83,8 @@ export const projects: Project[] = [
       "React",
       "TypeScript",
       "Tailwind",
-      "Vite"
+      "Vite",
+      "Git"
     ],
     role: "Solo developer: architecture, component design, animation systems, and build tooling.",
 
@@ -258,7 +250,7 @@ Getting here took a lot more prototyping than the final system suggests. I went 
     shortDescription:
       "A controller-free VR app for learning ASL alphabets and digits on Meta Quest, with real-time hand-tracking feedback.",
     coverImage: "/SignPoseCover.png",
-    skills: ["C#", "Unity", "VR", "Meta XR SDK", "Unity XR SDK", "Open XR"],
+    skills: ["C#", "Unity", "VR", "Meta XR SDK", "Unity XR SDK", "Open XR", "Git"],
     role: "Solo project: designed, built, and published the full application to the Meta Horizon Store.",
     problemStatement:
       `
@@ -358,6 +350,7 @@ I ran a small round of informal testing four to five people trying the headset c
       "Network Science",
       "Louvain Clustering",
       "Data Visualization",
+      "Git"
     ],
     role: "2 man team - Built end-to-end with co-contributor, working together across the full pipeline from data ingestion through the network analysis and final visualization, rather than split by fixed component ownership.",
 
@@ -480,6 +473,7 @@ There's no CI pipeline, automated test suite, or profiling data in the project, 
       "SQL",
       "LLM Integration",
       "Streamlit",
+      "Git"
     ],
     role: "Team effort - Built the real-time events pipeline (Kafka ingestion, SQLite persistence, FAISS indexing, and time-aware retrieval) and led integration across the team's three independently-built subsystems into one working app.",
 
@@ -576,6 +570,7 @@ There's no CI pipeline, automated test suite, or profiling data in the project, 
       "Differential Privacy",
       "Flask",
       "Docker",
+      "Git"
     ],
     role: "2 man team - Co-built end-to-end with one other contributor, roughly equal split across server orchestration, client-side encryption and differential privacy logic, Docker deployment, and the final report.",
 
