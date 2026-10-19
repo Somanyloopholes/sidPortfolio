@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useOutlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { useLenis } from 'lenis/react';
@@ -15,8 +15,8 @@ function App() {
   const element = useOutlet();
   const lenis = useLenis();
   
-  const prevLocation = useRef(location.pathname);
-  const prevDirection = useRef(1);
+  const baseRoute = location.pathname.startsWith('/projects') ? '/projects' : location.pathname;
+  const [routeState, setRouteState] = useState({ prev: baseRoute, direction: 1 });
 
   useEffect(() => {
     if (lenis) {
@@ -24,18 +24,17 @@ function App() {
     } else {
       window.scrollTo(0, 0);
     }
-  }, [location.pathname, lenis]);
+  }, [baseRoute, lenis]);
 
-  let direction = prevDirection.current;
-  if (location.pathname !== prevLocation.current) {
-    const currentIndex = routeOrder.indexOf(location.pathname);
-    const prev = routeOrder.indexOf(prevLocation.current);
+  let direction = routeState.direction;
+  if (baseRoute !== routeState.prev) {
+    const currentIndex = routeOrder.indexOf(baseRoute);
+    const prevIndex = routeOrder.indexOf(routeState.prev);
     
-    if (currentIndex !== -1 && prev !== -1) {
-      direction = currentIndex > prev ? 1 : -1;
-      prevDirection.current = direction;
+    if (currentIndex !== -1 && prevIndex !== -1) {
+      direction = currentIndex > prevIndex ? 1 : -1;
     }
-    prevLocation.current = location.pathname;
+    setRouteState({ prev: baseRoute, direction });
   }
 
   const variants = {
@@ -62,7 +61,7 @@ function App() {
       <main className='mt-[calc(2.5rem+1vh)] flex-1 flex w-full relative'>
         <AnimatePresence mode="popLayout" custom={direction} initial={false}>
           <motion.div
-            key={location.pathname}
+            key={baseRoute}
             custom={direction}
             variants={variants}
             initial="initial"

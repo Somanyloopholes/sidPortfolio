@@ -32,6 +32,41 @@ export default function ContactCard({ className = "" }: ContactCardProps) {
   const glareX = useTransform(smoothX, [0, 1], ["50%", "-50%"]);
   const glareY = useTransform(smoothY, [0, 1], ["50%", "-50%"]);
 
+  useEffect(() => {
+    // Check if device requires permission (iOS 13+). If so, skip gyro entirely to avoid user friction/popups.
+    const isIOS =
+      typeof window !== 'undefined' &&
+      'DeviceOrientationEvent' in window &&
+      typeof (window.DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> })?.requestPermission === 'function';
+    if (!isMobile || isIOS) return;
+
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      const { beta, gamma } = event;
+      if (beta === null || gamma === null) return;
+      
+      // gamma (roll): left-to-right tilt. Typical range: -45 to 45.
+      const clampedGamma = Math.max(-45, Math.min(45, gamma));
+      const mappedX = (clampedGamma + 45) / 90; // 0 to 1
+      
+      // beta (pitch): front-to-back tilt. Typical range: 0 to 90.
+      const clampedBeta = Math.max(0, Math.min(90, beta));
+      const mappedY = clampedBeta / 90; // 0 to 1
+      
+      mouseX.set(mappedX);
+      mouseY.set(mappedY);
+    };
+
+    if (typeof window !== 'undefined' && window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+    
+    return () => {
+      if (typeof window !== 'undefined' && window.DeviceOrientationEvent) {
+        window.removeEventListener('deviceorientation', handleOrientation);
+      }
+    };
+  }, [isMobile, mouseX, mouseY]);
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (isMobile) return;
     const rect = e.currentTarget.getBoundingClientRect();
@@ -53,9 +88,9 @@ export default function ContactCard({ className = "" }: ContactCardProps) {
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{
-          rotateX: isMobile ? 0 : rotateX,
-          rotateY: isMobile ? 0 : rotateY,
-          transformStyle: isMobile ? "flat" : "preserve-3d",
+          rotateX,
+          rotateY,
+          transformStyle: "preserve-3d",
           willChange: "transform",
         }}
         className="relative flex flex-col justify-between overflow-hidden rounded-none bg-primary-background p-4 md:p-5 border border-tertiary-text/30 shadow-[0_30px_60px_rgba(0,0,0,0.5)] transition-shadow duration-300 hover:shadow-[0_40px_80px_rgba(0,0,0,0.6)]
@@ -73,22 +108,20 @@ export default function ContactCard({ className = "" }: ContactCardProps) {
         />
 
         {/* Dynamic Glare (Hardware Accelerated) */}
-        {!isMobile && (
-          <motion.div
-            className="pointer-events-none absolute top-[-50%] left-[-50%] w-[200%] h-[200%] z-10 opacity-70"
-            style={{
-              x: glareX,
-              y: glareY,
-              background: "radial-gradient(circle at center, rgba(255,255,255,0.06) 0%, transparent 50%)",
-              willChange: "transform"
-            }}
-          />
-        )}
+        <motion.div
+          className="pointer-events-none absolute top-[-50%] left-[-50%] w-[200%] h-[200%] z-10 opacity-70"
+          style={{
+            x: glareX,
+            y: glareY,
+            background: "radial-gradient(circle at center, rgba(255,255,255,0.06) 0%, transparent 50%)",
+            willChange: "transform"
+          }}
+        />
 
         {/* Center Content */}
         <div
           className="z-20 flex flex-col items-center justify-center absolute inset-0 pointer-events-none"
-          style={{ transform: isMobile ? "none" : "translateZ(60px)" }}
+          style={{ transform: "translateZ(60px)" }}
         >
           <div className="flex flex-col items-center gap-1 md:gap-0 md:-space-y-1">
             <h2 className="font-mono text-[24px] leading-[32px] font-semibold md:text-section-heading text-hero-accent uppercase pointer-events-auto text-center">
@@ -106,7 +139,7 @@ export default function ContactCard({ className = "" }: ContactCardProps) {
         {/* Footer Contacts */}
         <div
           className="z-20 flex flex-col md:flex-row md:items-end md:justify-between gap-4 mt-auto w-full"
-          style={{ transform: isMobile ? "none" : "translateZ(50px)" }}
+          style={{ transform: "translateZ(50px)" }}
         >
           <CopyableField
             icon={<Mail className="w-4 h-4 md:w-5 md:h-5" />}

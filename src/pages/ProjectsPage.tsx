@@ -1,16 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ExternalLink } from 'lucide-react';
 import { projects, skillsList, type Project } from '../data/projects';
 import ReactMarkdown from 'react-markdown';
 
 const getMarkdownComponents = (textClass: string = "text-tertiary-text") => ({
-  p: ({ children }: any) => <p className={`text-body-prose ${textClass} leading-relaxed mb-4 last:mb-0`}>{children}</p>,
-  a: ({ children, href }: any) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-hero-accent hover:underline">{children}</a>,
-  strong: ({ children }: any) => <strong className="text-secondary-text font-bold">{children}</strong>,
-  ul: ({ children }: any) => <ul className={`list-disc list-inside mb-4 ${textClass}`}>{children}</ul>,
-  li: ({ children }: any) => <li className="mb-1">{children}</li>,
-  img: ({ src, alt }: any) => {
+  p: ({ children }: { children?: React.ReactNode }) => <p className={`text-body-prose ${textClass} leading-relaxed mb-4 last:mb-0`}>{children}</p>,
+  a: ({ children, href }: { children?: React.ReactNode; href?: string }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-hero-accent hover:underline">{children}</a>,
+  strong: ({ children }: { children?: React.ReactNode }) => <strong className="text-secondary-text font-bold">{children}</strong>,
+  ul: ({ children }: { children?: React.ReactNode }) => <ul className={`list-disc list-inside mb-4 ${textClass}`}>{children}</ul>,
+  li: ({ children }: { children?: React.ReactNode }) => <li className="mb-1">{children}</li>,
+  img: ({ src, alt }: { src?: string; alt?: string }) => {
     if (alt?.startsWith('grid-3') && src) {
       const decodedSrc = decodeURIComponent(src);
       const srcs = decodedSrc.split(',');
@@ -117,7 +118,45 @@ export default function ProjectsPage() {
   }, []);
 
   const [activeSkills, setActiveSkills] = useState<string[]>(["All"]);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const { projectId } = useParams<{ projectId?: string }>();
+  const navigate = useNavigate();
+
+  const selectedProject = projectId ? projects.find(p => p.id === projectId) || null : null;
+
+  const handleSelectProject = (project: Project) => {
+    navigate(`/projects/${project.id}`);
+  };
+
+  const handleClose = useCallback(() => {
+    navigate('/projects');
+  }, [navigate]);
+
+  // Safe redirect if invalid projectId is entered in URL
+  useEffect(() => {
+    if (projectId && !projects.some(p => p.id === projectId)) {
+      navigate('/projects', { replace: true });
+    }
+  }, [projectId, navigate]);
+
+  // Update document title for deep-linked project pages
+  useEffect(() => {
+    if (selectedProject) {
+      document.title = `${selectedProject.title} | Sid Geddam`;
+    } else {
+      document.title = 'Sid Geddam';
+    }
+  }, [selectedProject]);
+
+  // Close modal on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedProject) {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedProject, handleClose]);
 
   const toggleSkill = (skill: string) => {
     setActiveSkills(prev => {
@@ -230,7 +269,7 @@ export default function ProjectsPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ layout: { type: "spring", stiffness: 300, damping: 30 } }}
                 key={project.id}
-                onClick={() => setSelectedProject(project)}
+                onClick={() => handleSelectProject(project)}
                 className={`w-full ${spanClass} border border-hero-accent bg-primary-background cursor-pointer rounded-none flex flex-col hover:border-hero-accent transition-colors group relative overflow-hidden`}
               >
                 {project.coverImage ? (
@@ -262,7 +301,7 @@ export default function ProjectsPage() {
             />
             <div 
               className="fixed inset-0 z-[70] overflow-y-auto p-4 md:p-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-              onClick={() => setSelectedProject(null)}
+              onClick={handleClose}
               style={{ overscrollBehavior: 'contain' }}
               data-lenis-prevent="true"
             >
@@ -276,7 +315,7 @@ export default function ProjectsPage() {
                 >
                   <div className="w-full flex flex-col relative">
                     <button 
-                      onClick={() => setSelectedProject(null)}
+                      onClick={handleClose}
                       className="absolute top-4 right-4 md:top-6 md:right-6 p-2 bg-primary-background border border-hero-accent text-hero-accent hover:bg-hero-accent hover:text-primary-background transition-colors z-50"
                     >
                       <X size={20} />
