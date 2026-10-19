@@ -33,39 +33,43 @@ export default function ContactCard({ className = "" }: ContactCardProps) {
   const glareY = useTransform(smoothY, [0, 1], ["50%", "-50%"]);
 
   useEffect(() => {
-    // Check if device requires permission (iOS 13+). If so, skip gyro entirely to avoid user friction/popups.
+    // Check if device requires permission (iOS 13+). If so, skip gyro to avoid user friction/popups.
     const isIOS =
       typeof window !== 'undefined' &&
       'DeviceOrientationEvent' in window &&
       typeof (window.DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> })?.requestPermission === 'function';
-    if (!isMobile || isIOS) return;
+    if (isIOS) return;
 
     const handleOrientation = (event: DeviceOrientationEvent) => {
       const { beta, gamma } = event;
       if (beta === null || gamma === null) return;
       
-      // gamma (roll): left-to-right tilt. Typical range: -45 to 45.
-      const clampedGamma = Math.max(-45, Math.min(45, gamma));
-      const mappedX = (clampedGamma + 45) / 90; // 0 to 1
+      // gamma (roll: left-to-right tilt). Natural center is 0 deg.
+      // Make responsive within a natural ±25 deg wrist tilt range.
+      const clampedGamma = Math.max(-25, Math.min(25, gamma));
+      const mappedX = (clampedGamma + 25) / 50; // 0 to 1
       
-      // beta (pitch): front-to-back tilt. Typical range: 0 to 90.
-      const clampedBeta = Math.max(0, Math.min(90, beta));
-      const mappedY = clampedBeta / 90; // 0 to 1
+      // beta (pitch: forward/back tilt). When reading on a phone, natural hold is ~50 deg.
+      // Center around 50 deg with a ±25 deg window (25 to 75 deg).
+      const clampedBeta = Math.max(25, Math.min(75, beta));
+      const mappedY = (clampedBeta - 25) / 50; // 0 to 1
       
       mouseX.set(mappedX);
       mouseY.set(mappedY);
     };
 
-    if (typeof window !== 'undefined' && window.DeviceOrientationEvent) {
+    if (typeof window !== 'undefined') {
       window.addEventListener('deviceorientation', handleOrientation);
+      window.addEventListener('deviceorientationabsolute', handleOrientation as EventListener);
     }
     
     return () => {
-      if (typeof window !== 'undefined' && window.DeviceOrientationEvent) {
+      if (typeof window !== 'undefined') {
         window.removeEventListener('deviceorientation', handleOrientation);
+        window.removeEventListener('deviceorientationabsolute', handleOrientation as EventListener);
       }
     };
-  }, [isMobile, mouseX, mouseY]);
+  }, [mouseX, mouseY]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (isMobile) return;
@@ -82,11 +86,31 @@ export default function ContactCard({ className = "" }: ContactCardProps) {
     mouseY.set(0.5);
   };
 
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 0) return;
+    const touch = e.touches[0];
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(rect.width, touch.clientX - rect.left));
+    const y = Math.max(0, Math.min(rect.height, touch.clientY - rect.top));
+    mouseX.set(x / rect.width);
+    mouseY.set(y / rect.height);
+  };
+
+  const handleTouchEnd = () => {
+    mouseX.set(0.5);
+    mouseY.set(0.5);
+  };
+
   return (
-    <div className={`perspective-[1500px] flex w-full items-center justify-center ${className}`}>
+    <div 
+      className={`flex w-full items-center justify-center ${className}`}
+      style={{ perspective: 1200 }}
+    >
       <motion.div
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         style={{
           rotateX,
           rotateY,
