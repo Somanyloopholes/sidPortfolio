@@ -1,16 +1,17 @@
 @import "tailwindcss";
 @import "@fontsource/geist-mono";
+@import "@fontsource/geist-mono/500.css";
+@import "@fontsource/geist-mono/600.css";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
 @import "@fontsource-variable/inter";
-@import "@fontsource/jetbrains-mono";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --bg-color: #131314;
-  --text-color: #F4F4F5;
+  --bg-color: var(--color-primary-background);
+  --text-color: var(--color-secondary-text);
+  color-scheme: dark;
   font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -23,13 +24,14 @@
   --color-app-text: var(--text-color);
   --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --font-inter: "Inter Variable", sans-serif;
-  --font-jetbrains: "JetBrains Mono", monospace;
 
   /* Figma Colors */
   --color-primary-background: #131314;
   --color-secondary-text: #F4F4F5;
   --color-tertiary-text: #A1A1AA;
   --color-hero-accent: #A6D800;
+  /* Neutral border for static containers; lime is reserved for interactive, active and signature frames. */
+  --color-subtle-border: color-mix(in srgb, var(--color-tertiary-text) 25%, transparent);
 }
 
 html,
@@ -65,7 +67,7 @@ body {
 
   /* Figma Typography */
   .text-display-hero {
-    @apply font-mono text-[33px] leading-[40px] font-semibold md:text-[64px] md:leading-[48px];
+    @apply font-mono text-[33px] leading-[40px] font-semibold md:text-[64px] md:leading-[64px];
   }
 
   .text-section-heading {
@@ -77,7 +79,7 @@ body {
   }
 
   .text-statement-mono {
-    @apply font-jetbrains text-[16px] leading-[24px] font-normal md:text-[20px] md:leading-[28px];
+    @apply font-mono text-[16px] leading-[24px] font-normal md:text-[20px] md:leading-[28px];
   }
 
   .text-title-small {
@@ -112,11 +114,11 @@ body {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background-color: rgb(166 216 0 / 0.4);
+    background-color: color-mix(in srgb, var(--color-hero-accent) 40%, transparent);
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background-color: rgb(166 216 0 / 0.8);
+    background-color: color-mix(in srgb, var(--color-hero-accent) 80%, transparent);
   }
   * {
     scrollbar-width: thin;
