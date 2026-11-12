@@ -30,10 +30,11 @@ export default function HomePage(): React.JSX.Element {
   return (
     <section className="flex min-h-[calc(100vh-3.5rem)] lg:h-[calc(100vh-3.5rem)] w-full flex-col items-center justify-start pt-0 pb-24 px-6 md:px-32 lg:px-48 xl:px-64 max-w-7xl mx-auto">
       <h1 className="sr-only">Siddharth Geddam, software engineer</h1>
-      <div className="w-full flex flex-col lg:flex-row gap-y-6 lg:gap-y-0 lg:gap-x-4 h-auto lg:h-full flex-grow">
+      {/* On desktop the row is as tall as the video column, so both columns start and end level */}
+      <div className="w-full flex flex-col lg:flex-row gap-y-6 lg:gap-y-0 lg:gap-x-4 h-auto flex-grow lg:flex-grow-0">
 
         {/* Left Column */}
-        <div className="flex-1 lg:flex-none lg:basis-[58%] flex flex-col gap-y-6 h-auto lg:h-full min-h-0">
+        <div className="flex-1 lg:min-w-0 flex flex-col gap-y-6 h-auto min-h-0">
 
           {/* Greeting Box */}
           <div className="border border-hero-accent bg-primary-background px-3 py-1 md:p-6 flex items-center shrink-0">
@@ -54,7 +55,9 @@ export default function HomePage(): React.JSX.Element {
         </div>
 
         {/* Right Column (Video/Animation) */}
-        <div className="shrink-0 lg:shrink lg:flex-1 lg:min-w-0 h-[350px] lg:h-full relative flex justify-center overflow-hidden bg-primary-background">
+        {/* On desktop the column keeps the video's 9:16 shape so the whole clip shows and the border hugs it:
+            full row height (100vh minus navbar and bottom padding) when that fits, otherwise capped at 42% of the row width */}
+        <div className="shrink-0 h-[350px] lg:h-auto lg:self-start lg:aspect-[9/16] lg:w-[min(42%,calc((100vh-9.5rem)*9/16))] relative flex justify-center overflow-hidden bg-primary-background">
           <video
             aria-hidden="true"
             autoPlay={!prefersReducedMotion}
@@ -63,12 +66,12 @@ export default function HomePage(): React.JSX.Element {
             playsInline
             controlsList="nodownload"
             onContextMenu={(e) => e.preventDefault()}
-            className="w-auto lg:w-full h-full block object-contain lg:object-cover pointer-events-none"
+            className="w-auto lg:w-full h-full block object-contain pointer-events-none"
           >
             <source src="/landingPageDithered.mp4" type="video/mp4" />
           </video>
 
-          {/* Border around the video column (on desktop the video fills it with object-cover) */}
+          {/* Border around the video column */}
           <div className="absolute inset-0 border border-hero-accent pointer-events-none" />
 
           {/* Scanline/Dot overlay to hide video pixelation/compression artifacts */}
