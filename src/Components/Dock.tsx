@@ -123,7 +123,8 @@ export default function Dock() {
       inert={isProjectModalOpen || undefined}
     >
       {activeLabel && (
-        <span aria-hidden="true" className="absolute -top-5 left-1/2 -translate-x-1/2 text-micro-tag text-hero-accent uppercase whitespace-nowrap pointer-events-none">
+        <span aria-hidden="true" className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-primary-background border border-hero-accent text-micro-tag text-hero-accent uppercase whitespace-nowrap pointer-events-none">
+
           {activeLabel}
         </span>
       )}

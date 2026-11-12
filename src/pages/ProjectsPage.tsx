@@ -1,11 +1,83 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useMemo, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ExternalLink } from 'lucide-react';
 import { projects, skillsList, skillGroups, type Project, type SkillGroup } from '../data/projects';
 import ReactMarkdown, { type ExtraProps } from 'react-markdown';
+import ImageLightbox, { type LightboxImage } from '@/Components/ImageLightbox';
 
-const getMarkdownComponents = (textClass: string = "text-tertiary-text") => ({
+// `![grid-3: caption](/a.webp,/b.webp,/c.webp)` renders as a three-image grid with one caption.
+const getGridCaption = (alt: string) => (alt.includes(':') ? alt.split(':')[1].trim() : null);
+const getGridImageAlt = (caption: string | null, i: number, total: number) =>
+  caption ? `${caption} (${i + 1} of ${total})` : `Image ${i + 1} of ${total}`;
+const isPlaceholderAlt = (alt: string) => alt === 'Image' || alt === 'grid-3' || alt.startsWith('alt');
+const normalizeSrc = (src: string) => {
+  try {
+    return decodeURIComponent(src).trim();
+  } catch {
+    return src.trim();
+  }
+};
+
+const markdownImagePattern = /!\[([^\]]*)\]\(([^)\s]+)\)/g;
+
+// Every image in a case study, in the order the modal shows them, so the lightbox can step through all of them.
+function collectCaseStudyImages(project: Project): LightboxImage[] {
+  const fields = [
+    project.fullDescription,
+    project.problemStatement,
+    project.architecture,
+    project.methodology,
+    ...(project.challenges ?? []).map(challenge => challenge.description),
+    project.impactsAndKeyTakeaways,
+  ];
+  const images: LightboxImage[] = [];
+  for (const field of fields) {
+    if (!field) continue;
+    for (const [, alt, src] of field.matchAll(markdownImagePattern)) {
+      if (alt.startsWith('grid-3')) {
+        const caption = getGridCaption(alt);
+        const srcs = normalizeSrc(src).split(',');
+        srcs.forEach((s, i) => images.push({ src: s.trim(), alt: getGridImageAlt(caption, i, srcs.length), caption }));
+      } else {
+        images.push({ src: normalizeSrc(src), alt, caption: alt && !isPlaceholderAlt(alt) ? alt : null });
+      }
+    }
+  }
+  return images;
+}
+
+interface ZoomableImageProps {
+  src: string;
+  alt: string;
+  onOpen?: (src: string) => void;
+}
+
+// A case-study image that opens in the lightbox when clicked; the border turns lime on hover and focus.
+const ZoomableImage = ({ src, alt, onOpen }: ZoomableImageProps) => {
+  const image = (
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      className="w-full h-auto object-contain border border-subtle-border bg-primary-background transition-colors group-hover/zoom:border-hero-accent group-focus-visible/zoom:border-hero-accent"
+    />
+  );
+  if (!onOpen) return image;
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(src)}
+      aria-label={alt ? `Enlarge image: ${alt}` : 'Enlarge image'}
+      className="group/zoom block w-full cursor-zoom-in focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hero-accent"
+    >
+      {image}
+    </button>
+  );
+};
+
+const getMarkdownComponents = (textClass: string = "text-tertiary-text", onOpenImage?: (src: string) => void) => ({
   // The img renderer below outputs a <figure>, which is invalid inside <p>, so paragraphs holding an image render as a <div> with the same classes.
   p: ({ children, node }: { children?: React.ReactNode } & ExtraProps) => {
     const containsImage = node?.children.some(child => child.type === 'element' && child.tagName === 'img');
@@ -18,15 +90,14 @@ const getMarkdownComponents = (textClass: string = "text-tertiary-text") => ({
   li: ({ children }: { children?: React.ReactNode }) => <li className="mb-1">{children}</li>,
   img: ({ src, alt }: { src?: string; alt?: string }) => {
     if (alt?.startsWith('grid-3') && src) {
-      const decodedSrc = decodeURIComponent(src);
-      const srcs = decodedSrc.split(',');
-      const caption = alt.includes(':') ? alt.split(':')[1].trim() : null;
+      const srcs = normalizeSrc(src).split(',');
+      const caption = getGridCaption(alt);
       return (
         <figure className="w-full my-6 flex flex-col items-center justify-center">
           <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
             {srcs.map((s: string, i: number) => (
               <div key={i} className="flex items-center justify-center">
-                <img src={s.trim()} alt={caption ? `${caption} (${i + 1} of ${srcs.length})` : `Image ${i + 1} of ${srcs.length}`} loading="lazy" decoding="async" className="w-full h-auto object-contain border border-subtle-border bg-primary-background" />
+                <ZoomableImage src={s.trim()} alt={getGridImageAlt(caption, i, srcs.length)} onOpen={onOpenImage} />
               </div>
             ))}
           </div>
@@ -39,8 +110,8 @@ const getMarkdownComponents = (textClass: string = "text-tertiary-text") => ({
     const isSmallImg = src?.includes('IEEExIIT3.');
     return (
       <figure className={`w-full my-6 flex flex-col items-center justify-center ${isSmallImg ? 'max-w-[70%] md:max-w-[45%] mx-auto' : ''}`}>
-        <img src={src} alt={alt} loading="lazy" decoding="async" className="w-full h-auto object-contain border border-subtle-border bg-primary-background" />
-        {alt && alt !== 'Image' && alt !== 'grid-3' && !alt.startsWith('alt') && (
+        {src && <ZoomableImage src={normalizeSrc(src)} alt={alt ?? ''} onOpen={onOpenImage} />}
+        {alt && !isPlaceholderAlt(alt) && (
           <figcaption className="mt-3 text-micro-tag text-tertiary-text text-center w-full">{alt}</figcaption>
         )}
       </figure>
@@ -140,6 +211,22 @@ export default function ProjectsPage() {
   const lastOpenedIdRef = useRef<string | null>(null);
 
   const selectedProject = projectId ? projects.find(p => p.id === projectId) || null : null;
+
+  // Case-study image lightbox. The open state is tied to a project id, so it closes by itself when the project modal closes.
+  const [lightbox, setLightbox] = useState<{ projectId: string; index: number } | null>(null);
+  const caseStudyImages = useMemo(() => (selectedProject ? collectCaseStudyImages(selectedProject) : []), [selectedProject]);
+  const lightboxIndex = lightbox && selectedProject && lightbox.projectId === selectedProject.id ? lightbox.index : null;
+
+  const openImage = useCallback((src: string) => {
+    if (!selectedProject) return;
+    const index = caseStudyImages.findIndex(image => image.src === src);
+    if (index !== -1) setLightbox({ projectId: selectedProject.id, index });
+  }, [selectedProject, caseStudyImages]);
+  const closeLightbox = useCallback(() => setLightbox(null), []);
+  const changeLightboxIndex = useCallback((index: number) => setLightbox(prev => prev && { ...prev, index }), []);
+
+  const markdownComponents = useMemo(() => getMarkdownComponents("text-tertiary-text", openImage), [openImage]);
+  const descriptionMarkdownComponents = useMemo(() => getMarkdownComponents("text-secondary-text", openImage), [openImage]);
 
   const handleSelectProject = (project: Project) => {
     lastOpenedIdRef.current = project.id;
@@ -280,13 +367,13 @@ export default function ProjectsPage() {
       </p>
 
       {/* Grid Matrix */}
-      <div inert={!!selectedProject || undefined} className="w-full flex flex-col md:grid md:grid-cols-12 gap-x-4 gap-y-6">
+      <div inert={!!selectedProject || undefined} className="w-full flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-12 gap-x-4 gap-y-6">
         <AnimatePresence mode="popLayout">
           {filteredProjects.map((project, index) => {
-            // Determine column span based on row type pattern (3 items, 4 items)
+            // Desktop (lg): alternating rows of 3 and 4 cards. Tablets get a plain two-column grid, phones one column.
             // Indices: 0,1,2 (span-4) | 3,4,5,6 (span-3)
             const cycle = index % 7;
-            const spanClass = cycle < 3 ? 'md:col-span-4' : 'md:col-span-3';
+            const spanClass = cycle < 3 ? 'lg:col-span-4' : 'lg:col-span-3';
 
             return (
               <motion.div
@@ -341,6 +428,8 @@ export default function ProjectsPage() {
               onClick={handleClose}
               style={{ overscrollBehavior: 'contain' }}
               data-lenis-prevent="true"
+              // While an image is enlarged, the case study behind it can't be focused or clicked.
+              inert={lightboxIndex !== null || undefined}
             >
                 <motion.div
                   initial={{ opacity: 0, y: 50, scale: 0.95 }}
@@ -447,7 +536,7 @@ export default function ProjectsPage() {
                             <p className="text-micro-tag text-tertiary-text">{selectedProject.role}</p>
                           )}
                           {selectedProject.fullDescription && (
-                            <ReactMarkdown components={getMarkdownComponents("text-secondary-text")}>
+                            <ReactMarkdown components={descriptionMarkdownComponents}>
                               {selectedProject.fullDescription}
                             </ReactMarkdown>
                           )}
@@ -482,19 +571,19 @@ export default function ProjectsPage() {
                       {selectedProject.problemStatement && (
                         <div className="flex flex-col gap-2">
                           <h3 id="cs-problem" tabIndex={-1} className="text-sub-heading text-secondary-text uppercase tracking-widest scroll-mt-6">Problem Statement</h3>
-                          <ReactMarkdown components={getMarkdownComponents()}>{selectedProject.problemStatement}</ReactMarkdown>
+                          <ReactMarkdown components={markdownComponents}>{selectedProject.problemStatement}</ReactMarkdown>
                         </div>
                       )}
                       {selectedProject.architecture && (
                         <div className="flex flex-col gap-2">
                           <h3 id="cs-architecture" tabIndex={-1} className="text-sub-heading text-secondary-text uppercase tracking-widest scroll-mt-6">Architecture</h3>
-                          <ReactMarkdown components={getMarkdownComponents()}>{selectedProject.architecture}</ReactMarkdown>
+                          <ReactMarkdown components={markdownComponents}>{selectedProject.architecture}</ReactMarkdown>
                         </div>
                       )}
                       {selectedProject.methodology && (
                         <div className="flex flex-col gap-2">
                           <h3 id="cs-methodology" tabIndex={-1} className="text-sub-heading text-secondary-text uppercase tracking-widest scroll-mt-6">Methodology</h3>
-                          <ReactMarkdown components={getMarkdownComponents()}>{selectedProject.methodology}</ReactMarkdown>
+                          <ReactMarkdown components={markdownComponents}>{selectedProject.methodology}</ReactMarkdown>
                         </div>
                       )}
                       {selectedProject.challenges && selectedProject.challenges.length > 0 && (
@@ -504,7 +593,7 @@ export default function ProjectsPage() {
                             {selectedProject.challenges.map((challenge, idx) => (
                               <div key={idx} className="flex flex-col gap-1">
                                 <h4 className="text-body-prose text-secondary-text font-bold">{challenge.title}</h4>
-                                <ReactMarkdown components={getMarkdownComponents()}>{challenge.description}</ReactMarkdown>
+                                <ReactMarkdown components={markdownComponents}>{challenge.description}</ReactMarkdown>
                               </div>
                             ))}
                           </div>
@@ -513,7 +602,7 @@ export default function ProjectsPage() {
                       {selectedProject.impactsAndKeyTakeaways && (
                         <div className="flex flex-col gap-2">
                           <h3 id="cs-impact" tabIndex={-1} className="text-sub-heading text-secondary-text uppercase tracking-widest scroll-mt-6">Impacts & Key Takeaways</h3>
-                          <ReactMarkdown components={getMarkdownComponents()}>{selectedProject.impactsAndKeyTakeaways}</ReactMarkdown>
+                          <ReactMarkdown components={markdownComponents}>{selectedProject.impactsAndKeyTakeaways}</ReactMarkdown>
                         </div>
                       )}
                       {selectedProject.techStack && selectedProject.techStack.length > 0 && (
@@ -544,6 +633,13 @@ export default function ProjectsPage() {
           </>
         )}
       </AnimatePresence>
+
+      <ImageLightbox
+        images={caseStudyImages}
+        index={lightboxIndex}
+        onIndexChange={changeLightboxIndex}
+        onClose={closeLightbox}
+      />
 
     </section>
   );
