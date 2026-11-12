@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { ReactLenis } from 'lenis/react'
+import { MotionConfig } from 'motion/react'
 import './index.css'
 import App from './App.tsx'
 import HomePage from './pages/HomePage.tsx'
@@ -23,10 +24,14 @@ const router = createBrowserRouter([
   },
 ])
 
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ReactLenis root options={{ lerp: 0.07, smoothWheel: true }}>
-      <RouterProvider router={router} />
+    <ReactLenis root options={{ lerp: 0.1, smoothWheel: !prefersReducedMotion }}>
+      <MotionConfig reducedMotion="user">
+        <RouterProvider router={router} />
+      </MotionConfig>
     </ReactLenis>
   </StrictMode>,
 )

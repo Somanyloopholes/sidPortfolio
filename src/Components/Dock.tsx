@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useReducedMotion } from "motion/react";
 import { Home, Briefcase, FolderCode, Mail } from "lucide-react";
 
 import { Dock as MotionDock, DockIcon, DockItem, DockLabel } from "@/Components/motion-primitives/dock";
@@ -62,6 +63,12 @@ const dockRoutes: RouteConfig[] = [
 export default function Dock() {
   const navigate = useNavigate();
   const location = useLocation();
+  const prefersReducedMotion = useReducedMotion();
+  const isProjectModalOpen = location.pathname.startsWith("/projects/");
+  // Magnify only with a real hover pointer; on touch, a tap would leave the dock stuck enlarged.
+  const [canHover] = React.useState(
+    () => typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches
+  );
 
   const [isMobile, setIsMobile] = React.useState(
     typeof window !== "undefined" ? window.innerWidth < 640 : false
@@ -72,6 +79,14 @@ export default function Dock() {
     }
     return 1;
   });
+
+  const isRouteActive = (route: RouteConfig) => route.internal && (
+    location.pathname === route.to ||
+    location.pathname === route.to + '/' ||
+    (route.to !== '/' && location.pathname.startsWith(route.to))
+  );
+  // Touch screens get no hover tooltips, so name the current page above the dock instead.
+  const activeLabel = (isMobile || !canHover) ? dockRoutes.find(isRouteActive)?.label : undefined;
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -98,30 +113,36 @@ export default function Dock() {
   }, []);
 
   return (
-    <div 
+    <nav
+      aria-label="Main"
       className="fixed bottom-4 md:bottom-8 left-1/2 z-50 origin-bottom flex justify-center"
       style={{ 
         transform: `translateX(-50%) scale(${isMobile ? scale : 1})`,
         width: "max-content"
       }}
+      inert={isProjectModalOpen || undefined}
     >
-      <MotionDock 
-        panelHeight={48} 
-        magnification={isMobile ? 40 : 80}
+      {activeLabel && (
+        <span aria-hidden="true" className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-primary-background border border-hero-accent text-micro-tag text-hero-accent uppercase whitespace-nowrap pointer-events-none">
+
+          {activeLabel}
+        </span>
+      )}
+      <MotionDock
+        panelHeight={48}
+        magnification={isMobile || prefersReducedMotion || !canHover ? 40 : 56}
         distance={100}
         className="items-center justify-center rounded-none bg-primary-background border border-hero-accent shadow-2xl dark:bg-primary-background gap-1 sm:gap-3 px-1 sm:px-2"
       >
         {dockRoutes.map((route) => {
           const Icon = route.icon;
-          const isActive = route.internal && (
-            location.pathname === route.to || 
-            location.pathname === route.to + '/' || 
-            (route.to !== '/' && location.pathname.startsWith(route.to))
-          );
+          const isActive = isRouteActive(route);
           
           return (
             <DockItem
               key={route.label}
+              ariaLabel={route.label}
+              ariaCurrent={isActive ? "page" : undefined}
               onClick={() => {
                 if (route.internal) {
                   navigate(route.to);
@@ -131,7 +152,7 @@ export default function Dock() {
               }}
               className={isActive ? "text-hero-accent" : "text-tertiary-text hover:text-secondary-text transition-colors"}
             >
-              <DockLabel className="hidden sm:block">{route.label}</DockLabel>
+              <DockLabel className="hidden sm:block rounded-none border-hero-accent bg-primary-background text-secondary-text font-mono">{route.label}</DockLabel>
               <DockIcon className="relative">
                 <Icon className="size-full" />
               </DockIcon>
@@ -140,6 +161,6 @@ export default function Dock() {
         })}
         
       </MotionDock>
-    </div>
+    </nav>
   );
 }

@@ -2,14 +2,17 @@
 import {
   useScroll,
   useTransform,
+  useReducedMotion,
   motion,
 } from "motion/react";
 import React, { useEffect, useRef, useState } from "react";
-import { Briefcase, GraduationCap } from "lucide-react";
+import { Briefcase, GraduationCap, type LucideIcon } from "lucide-react";
 
 interface TimelineEntry {
   type: "education" | "work";
   position?: "left" | "right";
+  /** Icon shown large in the marker; defaults to a cap (education) or briefcase (work). */
+  icon?: LucideIcon;
   content: React.ReactNode;
 }
 
@@ -60,6 +63,8 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
 
   const heightTransform = useTransform(scrollYProgress, [0, 1], [0, height]);
   const opacityTransform = useTransform(scrollYProgress, [0, 0.1], [0, 1]);
+  // With reduced motion, show the progress line fully drawn instead of tying it to scroll.
+  const prefersReducedMotion = useReducedMotion();
 
   return (
     <div
@@ -78,7 +83,7 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
       <div ref={ref} className="relative max-w-2xl mx-auto pb-20">
         {data.map((item, index) => {
           const isEducation = item.type === "education";
-          const Icon = isEducation ? GraduationCap : Briefcase;
+          const Icon = item.icon ?? (isEducation ? GraduationCap : Briefcase);
 
           const markerStyle = "bg-primary-background border border-hero-accent text-hero-accent";
 
@@ -86,24 +91,25 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
             <div
               key={index}
               ref={index === 0 ? firstIconRef : index === data.length - 1 ? lastIconRef : null}
-              className={`relative w-full flex flex-col md:flex-row md:justify-center group ${index === 0 ? "mt-0" : "mt-24 md:mt-32"}`}
+              className={`relative w-full flex flex-col lg:flex-row lg:justify-center group ${index === 0 ? "mt-0" : "mt-24 lg:mt-32"}`}
             >
               {/* Marker */}
               <div
-                className="relative md:absolute md:left-1/2 md:inset-y-0 flex w-full md:w-24 md:-translate-x-1/2 items-center justify-center rounded-none z-40 mb-4 md:mb-0"
+                className="relative lg:absolute lg:left-1/2 lg:inset-y-0 flex w-full lg:w-24 lg:-translate-x-1/2 items-center justify-center rounded-none z-40 mb-4 lg:mb-0"
               >
-                <div className={`flex h-12 md:h-full w-full items-center justify-center rounded-none border ${markerStyle}`}>
-                  <Icon className="h-5 w-5 md:h-8 md:w-8" strokeWidth={1.5} />
+                <div className={`flex h-12 lg:h-full w-full items-center justify-center rounded-none border ${markerStyle}`}>
+                  <Icon className="h-8 w-8 lg:h-16 lg:w-16" strokeWidth={1.25} aria-hidden="true" />
+                  <span className="sr-only">{isEducation ? "Education" : "Work"}</span>
                 </div>
               </div>
 
               {/* Content Container */}
-              <div className={`w-full md:w-[calc(50%-3.75rem)] ${
+              <div className={`w-full lg:w-[calc(50%-3.75rem)] ${
                 item.position === 'left' 
-                  ? 'md:mr-auto md:ml-0 md:text-right' 
+                  ? 'lg:mr-auto lg:ml-0 lg:text-right' 
                   : item.position === 'right'
-                    ? 'md:ml-auto md:text-left'
-                    : isEducation ? 'md:mr-auto md:ml-0 md:text-right' : 'md:ml-auto md:text-left'
+                    ? 'lg:ml-auto lg:text-left'
+                    : isEducation ? 'lg:mr-auto lg:ml-0 lg:text-right' : 'lg:ml-auto lg:text-left'
               }`}>
                 {item.content}
               </div>
@@ -120,8 +126,8 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
         >
           <motion.div
             style={{
-              height: heightTransform,
-              opacity: opacityTransform,
+              height: prefersReducedMotion ? height : heightTransform,
+              opacity: prefersReducedMotion ? 1 : opacityTransform,
             }}
             className="absolute inset-x-0 top-0 w-[2px] bg-gradient-to-t from-hero-accent via-hero-accent to-transparent from-[0%] via-[10%] rounded-none"
           />
