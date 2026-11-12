@@ -39,6 +39,8 @@ export type DockItemProps = {
   className?: string;
   children: React.ReactNode;
   onClick?: () => void;
+  ariaLabel?: string;
+  ariaCurrent?: 'page';
 };
 
 export type DockLabelProps = {
@@ -118,8 +120,6 @@ function Dock({
           className
         )}
         style={{ height: panelHeight }}
-        role='toolbar'
-        aria-label='Application dock'
       >
         <DockProvider value={{ mouseX, spring, distance, magnification }}>
           {children}
@@ -129,7 +129,7 @@ function Dock({
   );
 }
 
-function DockItem({ children, className, onClick }: DockItemProps) {
+function DockItem({ children, className, onClick, ariaLabel, ariaCurrent }: DockItemProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   const { distance, magnification, mouseX, spring } = useDock();
@@ -158,13 +158,20 @@ function DockItem({ children, className, onClick }: DockItemProps) {
       onFocus={() => isHovered.set(1)}
       onBlur={() => isHovered.set(0)}
       className={cn(
-        'relative inline-flex items-center justify-center',
+        'relative inline-flex items-center justify-center self-stretch',
         className
       )}
       tabIndex={0}
-      role='button'
-      aria-haspopup='true'
+      role='link'
+      aria-label={ariaLabel}
+      aria-current={ariaCurrent}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
     >
       {Children.map(children, (child) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
