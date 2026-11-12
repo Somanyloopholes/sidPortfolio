@@ -1,13 +1,20 @@
+import { useEffect } from 'react';
+import { Cpu, GraduationCap, Presentation, SquareTerminal } from 'lucide-react';
 import { Timeline } from '@/Components/ui/timeline';
 
 export default function ExperiencePage() {
+  useEffect(() => {
+    document.title = 'Experience | Sid Geddam';
+  }, []);
+
   const data = [
     {
       type: "education" as const,
       position: "right" as const,
+      icon: GraduationCap,
       content: (
-        <div className="border border-hero-accent bg-primary-background relative z-20 p-6 w-full text-left">
-          <h3 className="text-title-small text-secondary-text mb-2">Master of Computer Science</h3>
+        <div className="border border-subtle-border bg-primary-background relative z-20 p-6 w-full text-left">
+          <h2 className="text-title-small text-secondary-text mb-2">Master of Computer Science</h2>
           <p className="text-body-prose text-tertiary-text">
             Illinois Institute of Technology,<br />
             Chicago, IL.
@@ -19,9 +26,10 @@ export default function ExperiencePage() {
     {
       type: "work" as const,
       position: "left" as const,
+      icon: Presentation,
       content: (
-        <div className="border border-hero-accent bg-primary-background relative z-20 p-6 w-full text-left">
-          <h3 className="text-title-small text-secondary-text mb-2">Teaching assistant</h3>
+        <div className="border border-subtle-border bg-primary-background relative z-20 p-6 w-full text-left">
+          <h2 className="text-title-small text-secondary-text mb-2">Teaching assistant</h2>
           <p className="text-body-prose text-tertiary-text">
             Illinois Institute of Technology,<br />
             Chicago, IL.
@@ -33,9 +41,10 @@ export default function ExperiencePage() {
     {
       type: "work" as const,
       position: "left" as const,
+      icon: SquareTerminal,
       content: (
-        <div className="border border-hero-accent bg-primary-background relative z-20 p-6 w-full text-left">
-          <h3 className="text-title-small text-secondary-text mb-2">Systems Engineer</h3>
+        <div className="border border-subtle-border bg-primary-background relative z-20 p-6 w-full text-left">
+          <h2 className="text-title-small text-secondary-text mb-2">Systems Engineer</h2>
           <p className="text-body-prose text-tertiary-text">
             Infosys Ltd,<br />
             Pune, India
@@ -47,9 +56,10 @@ export default function ExperiencePage() {
     {
       type: "education" as const,
       position: "right" as const,
+      icon: Cpu,
       content: (
-        <div className="border border-hero-accent bg-primary-background relative z-20 p-6 w-full text-left">
-          <h3 className="text-title-small text-secondary-text mb-2">Bachelor of Computer Engineering</h3>
+        <div className="border border-subtle-border bg-primary-background relative z-20 p-6 w-full text-left">
+          <h2 className="text-title-small text-secondary-text mb-2">Bachelor of Computer Engineering</h2>
           <p className="text-body-prose text-tertiary-text">
             University of Mumbai,<br />
             Mumbai, India
@@ -66,10 +76,10 @@ export default function ExperiencePage() {
         {/* Header Section */}
         <div className="w-full max-w-5xl mx-auto px-8 sm:px-12 md:px-24 lg:px-40 mb-[15vh] md:mb-[25vh]">
           <div className="w-full max-w-2xl mx-auto border border-hero-accent bg-primary-background py-2 px-4 md:py-4 md:px-6 flex flex-col items-center justify-center text-center">
-            <h1 className="font-mono text-[32px] leading-[36px] md:text-[48px] md:leading-[56px] font-semibold text-hero-accent tracking-wide">
+            <h1 className="text-section-heading text-hero-accent tracking-wide">
               The Journey so far
             </h1>
-            <p className="font-inter text-[14px] md:text-[16px] text-tertiary-text mt-1 md:mt-2">
+            <p className="text-body-prose text-tertiary-text mt-1 md:mt-2">
               A chronological timeline of my education and professional experience.
             </p>
           </div>

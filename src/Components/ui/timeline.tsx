@@ -2,14 +2,17 @@
 import {
   useScroll,
   useTransform,
+  useReducedMotion,
   motion,
 } from "motion/react";
 import React, { useEffect, useRef, useState } from "react";
-import { Briefcase, GraduationCap } from "lucide-react";
+import { Briefcase, GraduationCap, type LucideIcon } from "lucide-react";
 
 interface TimelineEntry {
   type: "education" | "work";
   position?: "left" | "right";
+  /** Icon shown large in the marker; defaults to a cap (education) or briefcase (work). */
+  icon?: LucideIcon;
   content: React.ReactNode;
 }
 
@@ -60,6 +63,8 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
 
   const heightTransform = useTransform(scrollYProgress, [0, 1], [0, height]);
   const opacityTransform = useTransform(scrollYProgress, [0, 0.1], [0, 1]);
+  // With reduced motion, show the progress line fully drawn instead of tying it to scroll.
+  const prefersReducedMotion = useReducedMotion();
 
   return (
     <div
@@ -78,7 +83,7 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
       <div ref={ref} className="relative max-w-2xl mx-auto pb-20">
         {data.map((item, index) => {
           const isEducation = item.type === "education";
-          const Icon = isEducation ? GraduationCap : Briefcase;
+          const Icon = item.icon ?? (isEducation ? GraduationCap : Briefcase);
 
           const markerStyle = "bg-primary-background border border-hero-accent text-hero-accent";
 
@@ -93,7 +98,8 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
                 className="relative md:absolute md:left-1/2 md:inset-y-0 flex w-full md:w-24 md:-translate-x-1/2 items-center justify-center rounded-none z-40 mb-4 md:mb-0"
               >
                 <div className={`flex h-12 md:h-full w-full items-center justify-center rounded-none border ${markerStyle}`}>
-                  <Icon className="h-5 w-5 md:h-8 md:w-8" strokeWidth={1.5} />
+                  <Icon className="h-8 w-8 md:h-16 md:w-16" strokeWidth={1.25} aria-hidden="true" />
+                  <span className="sr-only">{isEducation ? "Education" : "Work"}</span>
                 </div>
               </div>
 
@@ -120,8 +126,8 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
         >
           <motion.div
             style={{
-              height: heightTransform,
-              opacity: opacityTransform,
+              height: prefersReducedMotion ? height : heightTransform,
+              opacity: prefersReducedMotion ? 1 : opacityTransform,
             }}
             className="absolute inset-x-0 top-0 w-[2px] bg-gradient-to-t from-hero-accent via-hero-accent to-transparent from-[0%] via-[10%] rounded-none"
           />
