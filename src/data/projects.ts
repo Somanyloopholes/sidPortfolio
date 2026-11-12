@@ -72,13 +72,27 @@ export const skillsList = [
   "VR"
 ];
 
+export interface SkillGroup {
+  label: string;
+  skills: string[];
+}
+
+// Orders the filter chips (related skills sit together; labels aren't shown). Every skill in skillsList except "All" belongs to one group.
+export const skillGroups: SkillGroup[] = [
+  { label: "Languages", skills: ["Python", "TypeScript", "C#", "SQL", "R"] },
+  { label: "Frontend & design", skills: ["React", "Tailwind", "Vite", "Figma", "Figma MCP", "UI/UX"] },
+  { label: "AI, data & privacy", skills: ["RAG", "LLM Integration", "FAISS", "Data Visualization", "Spatial Analysis", "Network Science", "Louvain Clustering", "Federated Learning", "Homomorphic Encryption", "Differential Privacy"] },
+  { label: "Infra & tools", skills: ["Docker", "Apache Kafka", "Flask", "Streamlit", "Git"] },
+  { label: "XR", skills: ["Unity", "VR", "Meta XR SDK", "Unity XR SDK", "Open XR"] },
+];
+
 export const projects: Project[] = [
   {
     id: "sidportfolio-engineering",
     title: "Portfolio - Engineering the interface",
     shortDescription:
       "A React, TypeScript SPA with physics-based motion, a scroll-driven timeline, and a markdown-powered case-study system.",
-    coverImage: "/portfolioEngineeringCover.png",
+    coverImage: "/portfolioEngineeringCover.webp",
     skills: [
       "React",
       "TypeScript",
@@ -89,7 +103,7 @@ export const projects: Project[] = [
     role: "Solo developer: architecture, component design, animation systems, and build tooling.",
 
     problemStatement: `
-![Screenshot of the portfolio home page](/screenshots/portfolioEngineer1.png)
+![Screenshot of the portfolio home page](/screenshots/portfolioEngineer1.webp)
 
 Most portfolio sites either ship a handful of static pages or bolt animation on top as an afterthought, and that usually shows up as jank on scroll, inconsistent transition timing, or a data model that can't hold a real case study without breaking. I wanted one codebase that could support a growing set of detailed, markdown-rendered case studies, page-to-page navigation that reads as intentional rather than decorative, and a component layer strict enough in TypeScript that adding new sections wouldn't quietly introduce bugs.`,
 
@@ -97,9 +111,19 @@ Most portfolio sites either ship a handful of static pages or bolt animation on 
 
 **Routing and transitions:** Every time you navigate, the app needs to decide whether the new page should slide in from the left or the right, and that decision has to feel consistent no matter which two pages you're moving between. \`App.tsx\` keeps a \`routeOrder\` array (just the pages in their intended left-to-right order) and a ref that remembers the last page you were on. On every navigation it compares the new page's position in that array against the old one, and that comparison becomes a direction: left or right. That direction gets handed off to \`AnimatePresence\`, a Framer Motion component whose job is to let a page finish animating out before the next one mounts, so you never get a jarring cut. I'm using it in \`popLayout\` mode specifically, which means the outgoing and incoming pages don't fight each other for layout space while both are briefly on screen. I wrote this direction logic by hand instead of reaching for a page-transition library, since the actual computation is small and having full control over it made the timing easier to get right.
 
+![grid-3: Projects to Experience, before the click, mid-transition and settled](/screenshots/engTransition1.webp,/screenshots/engTransition2.webp,/screenshots/engTransition3.webp)
+
 **Content layer:** All the project and case-study data lives in one typed file, \`data/projects.ts\`, not a CMS or an API. The site is fully static by design, so the projects page just filters that array in the browser against whichever skill tags are active, and the case-study modal renders each project's text fields through \`react-markdown\`, a library that turns markdown syntax into actual styled HTML, with a custom set of components so paragraphs, links, images, and lists all match the site's type system instead of looking like default browser markdown.
 
-**Motion primitives:** The contact card and the timeline both skip Framer Motion's built-in animation presets and build directly on its lower-level hooks instead: \`useMotionValue\` (a value that can update every frame without triggering a React re-render), \`useSpring\` (which smooths a value's changes so it eases like a physical spring instead of snapping), and \`useTransform\` (which maps one animated value onto another, like turning mouse position into a rotation angle). That's the difference between the card tilt and the timeline's scroll tracking feeling like they're actually responding to you in real time, versus just playing a canned animation.`,
+![The projects page filtered to one skill, matched in the browser against each project's skills array](/screenshots/engProjectsFilter.webp)
+
+![A case study open in the modal, every section rendered from markdown through the custom components](/screenshots/engModal.webp)
+
+**Motion primitives:** The contact card and the timeline both skip Framer Motion's built-in animation presets and build directly on its lower-level hooks instead: \`useMotionValue\` (a value that can update every frame without triggering a React re-render), \`useSpring\` (which smooths a value's changes so it eases like a physical spring instead of snapping), and \`useTransform\` (which maps one animated value onto another, like turning mouse position into a rotation angle). That's the difference between the card tilt and the timeline's scroll tracking feeling like they're actually responding to you in real time, versus just playing a canned animation.
+
+![grid-3: The contact card following the pointer, tilted left, at rest and tilted right](/screenshots/engTiltLeft.webp,/screenshots/engTiltCenter.webp,/screenshots/engTiltRight.webp)
+
+![The experience timeline mid-scroll, its line tracking how far down the page you are](/screenshots/engTimeline.webp)`,
 
     methodology: `I built the routing and transition shell before any real page content existed, since getting slide direction and mount and unmount timing right is the kind of thing that's painful to fix later once pages have their own internal state to worry about. Everything after that got built and reviewed one section at a time: dock, contact card, timeline, project grid, rather than standing up whole pages at once. That made it a lot easier to catch layout regressions while they were still small.
 
@@ -155,7 +179,9 @@ TypeScript is configured in strict mode, with \`noUnusedLocals\`, \`noUnusedPara
 
 
 
-    impactsAndKeyTakeaways: `Building the transition and data layers first, before any content existed, paid off. Every new page and case study since has slotted into a structure that was already there instead of needing its own one-off logic. The biggest lesson was around motion specifically: reaching for Framer Motion's raw hooks instead of its animation presets took more upfront tuning, but it gave a lot more control over how the tilt, the scroll tracking, and the dock magnification actually feel, and that matters more on a portfolio than almost anywhere else. I'd make the same tradeoff again: hand-write the pieces that need to feel exact, and only reach for a library when the problem is genuinely generic.`,
+    impactsAndKeyTakeaways: `Building the transition and data layers first, before any content existed, paid off. Every new page and case study since has slotted into a structure that was already there instead of needing its own one-off logic. The biggest lesson was around motion specifically: reaching for Framer Motion's raw hooks instead of its animation presets took more upfront tuning, but it gave a lot more control over how the tilt, the scroll tracking, and the dock magnification actually feel, and that matters more on a portfolio than almost anywhere else. I'd make the same tradeoff again: hand-write the pieces that need to feel exact, and only reach for a library when the problem is genuinely generic.
+
+![grid-3: The same components at a 393px phone width, projects, experience and contact](/screenshots/engMobileProjects.webp,/screenshots/engMobileExperience.webp,/screenshots/engMobileContact.webp)`,
 
     media: [
       // TODO: screenshots/gifs dock magnification, contact card tilt, timeline scroll, case-study modal
@@ -169,7 +195,7 @@ TypeScript is configured in strict mode, with \`noUnusedLocals\`, \`noUnusedPara
     title: "Portfolio - Designing the system",
     shortDescription:
       "A single-accent, five-token color system and a role-based type scale, built in Figma and disciplined enough to hold up across a website, a LinkedIn banner, a GitHub README, and my own hardware.",
-    coverImage: "/portfolioDesignCover.png",
+    coverImage: "/portfolioDesignCover.webp",
     skills: [
       "Figma",
       "UI/UX",
@@ -177,11 +203,11 @@ TypeScript is configured in strict mode, with \`noUnusedLocals\`, \`noUnusedPara
     ],
     role: "Solo designer: visual identity, token architecture, and the Figma-to-code handoff structure.",
 
-    problemStatement: `![Designing the projects page in Figma with tokens](/PortfolioDesign1.png)
+    problemStatement: `![Designing the projects page in Figma with tokens](/PortfolioDesign1.webp)
 
 Most portfolio sites default to the same palette: near-black background, a blue accent, done. I wanted something that read as a deliberate identity instead of a default, without tipping into the kind of maximalism that stops being legible. The harder version of the problem was that the system couldn't just work on one page. It needed to survive being pulled onto a LinkedIn banner, rendered inside a GitHub README in both light and dark themes, and even reproduced on actual hardware (my Windows accent color and my keyboard RGB are both set to match it now). A system that only works on one background isn't really a system.`,
 
-    architecture: `![Overview of all the tokens used](/portfolioDesign2.png)
+    architecture: `![Overview of all the tokens used](/portfolioDesign2.webp)
 
 **Color:** Five Figma variables, which are named color values you define once and reuse everywhere instead of retyping a hex code on every element. They're kebab-cased (hyphenated, like \`primary-bg\`) so multi-word names stay readable: \`primary-bg\` (#131314), \`secondary-text\` (#F4F4F5), \`tertiary-text\` (#A1A1AA), \`hero-accent\` (#A6D800), and \`surface-dock\`, a 15% tint of the background used specifically for the dock's glass-like surface. Four neutrals and exactly one accent color. That restraint is the actual design decision, not a limitation.
 
@@ -191,7 +217,7 @@ Most portfolio sites default to the same palette: near-black background, a blue 
 
 **Handoff:** The path from design to code runs Figma to Figma MCP to Antigravity. Figma MCP is a bridge that lets an outside tool read a Figma file's variables, styles, and layout structure directly, instead of a developer manually describing the design in a prompt. Antigravity is the tool on the other end that turns that structure into actual code. The free tier of Figma MCP only allows 6 tool calls a month, which rules it out as something you'd query continuously while designing. So I built the workflow around that limit instead of fighting it: pull the full variable and style set once, save it directly into the site's CSS as reusable style variables, and treat that file as the source of truth from then on. I only go back to Figma MCP when the token set itself actually changes.`,
 
-    methodology: `![Multiple iterations of the contact page](/screenshots/portfolioDesign3.png)
+    methodology: `![Multiple iterations of the contact page](/screenshots/portfolioDesign3.webp)
 
 It took me a lot of experimentation and prototyping to settle on the final design. I decided on the color scheme first before I built a single token. The 3-tone, one-accent structure came after that decision, not before it. That ordering mattered, since it meant the system was built to express a choice I'd already made, rather than being assembled first and coloured in afterwards.
 
@@ -199,7 +225,29 @@ It took me a lot of experimentation and prototyping to settle on the final desig
 
 Typography followed the same logic. Geist Mono carries the bold display moments, the same instinct behind Palantir using a heavy, technical-feeling font for its hero type. Inter handles body copy, where actual readability matters more than character. JetBrains Mono is reserved for anything meant to read as code or a system statement.
 
-Getting here took a lot more prototyping than the final system suggests. I went through several passes on the contact card alone, which are documented in the corresponding Figma doc. At one point I had an entire alternate direction built out: glassmorphism, translucent panels, blur, the whole aesthetic, and got far enough into it to actually sit with it for a while. It looked fine in isolation, but it read as generic, the same visual language most portfolio sites default to. I scrapped that direction completely and rebuilt from the ground up around the current graphic, typography-led system, rather than trying to patch or salvage what I already had.`,
+Getting here took a lot more prototyping than the final system suggests. I went through several passes on the contact card alone, which are documented in the corresponding Figma doc. At one point I had an entire alternate direction built out: glassmorphism, translucent panels, blur, the whole aesthetic, and got far enough into it to actually sit with it for a while. It looked fine in isolation, but it read as generic, the same visual language most portfolio sites default to. I scrapped that direction completely and rebuilt from the ground up around the current graphic, typography-led system, rather than trying to patch or salvage what I already had.
+
+**Taking it past the browser, with Claude.** Once the site, the LinkedIn banner and the GitHub README shared one set of tokens, the real test was the screens I look at every day: my monitor, my laptop, my lock screen and my phone. I used Claude, through Claude Code, as the production side of this. It built a small rendering pipeline that draws every asset from the same CSS tokens the website uses and exports each one at its screen's exact pixel size, so the 1px lines stay sharp. I stayed on the art direction side: deciding what each screen is for, and rejecting anything that drifted from the system.
+
+![The LinkedIn banner, built from the same tokens and type as the site](/screenshots/systemLinkedIn.webp)
+
+![The GitHub profile README, where every styled section is rendered from the site's tokens](/screenshots/systemReadme.webp)
+
+That split is what made it work. My main monitor holds my desktop icons, so it gets the quietest piece: a world map drawn in the site's plus pattern, with only Chicago and Mumbai in lime. The laptop screen has no icons, so it gets the dense one, a HUD style dashboard built from things I actually care about, from a simulated lap of Spa to a drop waveform at 128 BPM.
+
+![The main monitor: the plus pattern as a world map, Chicago and Mumbai in lime](/screenshots/systemMainMonitor.webp)
+
+![The laptop dashboard, rendered at 1920 by 1080 from the site's tokens](/screenshots/systemDashboard.webp)
+
+![grid-3: Screen saver plates for Spa, a 128 BPM drop and a game style waypoint](/screenshots/systemPlateCircuit.webp,/screenshots/systemPlateDrop.webp,/screenshots/systemPlateWaypoint.webp)
+
+The lock screen pulls the best of those into a single plate that stays clear of the clock and the widgets, and the phone gets a condensed version of it, a quiet home screen and a text-free variant of both.
+
+![The lock screen plate, laid out around where Windows draws the clock](/screenshots/systemLockScreen.webp)
+
+![grid-3: Pixel 9 lock screen, the same plate with no text, and the home screen](/screenshots/systemPhoneLock.webp,/screenshots/systemPhoneLockClean.webp,/screenshots/systemPhoneHome.webp)
+
+Most of the work was saying no. Early plates that were technically interesting but not about me, a Bloch sphere, a Paillier encryption diagram, a motto card, got cut, and so did every name and caption. What survived follows the same rule as the website: four neutrals, one loud accent, and nothing that doesn't earn its place. Having Claude do the rendering made that kind of iteration cheap, and it made the design system the thing being tested, since every asset had to be rebuilt from the tokens rather than drawn by hand.`,
 
     challenges: [
       {
@@ -234,9 +282,14 @@ Getting here took a lot more prototyping than the final system suggests. I went 
       { name: "Antigravity", category: "Agentic Build Tool" },
       { name: "Auto Layout", category: "Layout System" },
       { name: "Geist Mono / Inter / JetBrains Mono", category: "Typography" },
+      {
+        name: "Claude Code",
+        category: "Asset Pipeline",
+        note: "rendered the banner, README, wallpapers, lock screens and phone screens from the site's tokens",
+      },
     ],
 
-    impactsAndKeyTakeaways: `Designing color and type around a single decision, one quiet system with exactly one place it's allowed to be loud, ended up being more durable than picking either the fully quiet or fully loud version outright. The tension between randoma11y's restraint and Marathon's intensity is the actual throughline of the identity, not something one direction won out over. On the handoff side, the clearest lesson was that Antigravity could only rebuild what the Figma file actually made legible: named variables, auto-layout structure, and a small token set did more for the pipeline than any amount of prompting would have. The system has also made its way beyond the site itself, onto a LinkedIn banner, a GitHub README, even my Windows accent color and keyboard RGB, which has been a good, if informal, gut check that the palette holds up outside a browser.`,
+    impactsAndKeyTakeaways: `Designing color and type around a single decision, one quiet system with exactly one place it's allowed to be loud, ended up being more durable than picking either the fully quiet or fully loud version outright. The tension between randoma11y's restraint and Marathon's intensity is the actual throughline of the identity, not something one direction won out over. On the handoff side, the clearest lesson was that Antigravity could only rebuild what the Figma file actually made legible: named variables, auto-layout structure, and a small token set did more for the pipeline than any amount of prompting would have. The system has also made its way beyond the site itself, onto a LinkedIn banner, a GitHub README, my desktop, lock screen and phone wallpapers, even my Windows accent color and keyboard RGB, which has been a good, if informal, gut check that the palette holds up outside a browser.`,
 
     media: [
       // TODO: Figma variables panel, typography scale panel, project-page mockup, before/after glassmorphism comparison
@@ -249,12 +302,12 @@ Getting here took a lot more prototyping than the final system suggests. I went 
     title: "SignPoseVR - Learn ASL in VR",
     shortDescription:
       "A controller-free VR app for learning ASL alphabets and digits on Meta Quest, with real-time hand-tracking feedback.",
-    coverImage: "/SignPoseCover.png",
+    coverImage: "/SignPoseCover.webp",
     skills: ["C#", "Unity", "VR", "Meta XR SDK", "Unity XR SDK", "Open XR", "Git"],
     role: "Solo project: designed, built, and published the full application to the Meta Horizon Store.",
     problemStatement:
       `
-![In-game view showing hand pose detection](/screenshots/signPoseVR1.png)
+![In-game view showing hand pose detection](/screenshots/signPoseVR1.webp)
 
 Learning the ASL alphabet and numbers usually means a 2D app or a YouTube tutorial. Both can show you the correct hand shape, but neither can tell you whether the shape you're actually making matches it. That's the gap I wanted to close. Quest's hand tracking let me skip controllers entirely and have someone practice with their actual hands, getting feedback the moment they get a sign right instead of just guessing and moving on.`,
     architecture:
@@ -343,7 +396,7 @@ I ran a small round of informal testing four to five people trying the headset c
     title: "Neighborhood Evolution in Cook County",
     shortDescription:
       "A decade-long spatial network analysis tracking how Cook County neighborhoods shift between seven distinct typologies built with KNN similarity graphs and Louvain community detection instead of fixed administrative boundaries.",
-    coverImage: "/CookCountyCover.png",
+    coverImage: "/CookCountyCover.webp",
     skills: [
       "R",
       "Spatial Analysis",
@@ -354,7 +407,7 @@ I ran a small round of informal testing four to five people trying the headset c
     ],
     role: "2 man team - Built end-to-end with co-contributor, working together across the full pipeline from data ingestion through the network analysis and final visualization, rather than split by fixed component ownership.",
 
-    problemStatement: `![grid-3: result of the clustering of all the communities and municipalities for the years 2013, 2018 and 2023](/screenshots/cookCounty1.1.png,/screenshots/cookCounty1.2.png,/screenshots/cookCounty1.3.png)\n\nNeighborhood-level inequality in the Chicago metro area is usually studied through fixed administrative boundaries like Community Areas, and those boundaries can mask change that happens gradually and doesn't respect a line on a map. We built similarity-based network graphs of Census block groups instead, using multivariate sociodemographic features to connect each block group to the ones most like it, then applied Louvain community detection to surface neighborhood typologies that emerge from the data itself rather than from administrative lines. Tracking how individual block groups move between those typologies across three time periods exposes gentrification, decline, and stabilization patterns that boundary-based analysis tends to miss.`,
+    problemStatement: `![grid-3: result of the clustering of all the communities and municipalities for the years 2013, 2018 and 2023](/screenshots/cookCounty1.1.webp,/screenshots/cookCounty1.2.webp,/screenshots/cookCounty1.3.webp)\n\nNeighborhood-level inequality in the Chicago metro area is usually studied through fixed administrative boundaries like Community Areas, and those boundaries can mask change that happens gradually and doesn't respect a line on a map. We built similarity-based network graphs of Census block groups instead, using multivariate sociodemographic features to connect each block group to the ones most like it, then applied Louvain community detection to surface neighborhood typologies that emerge from the data itself rather than from administrative lines. Tracking how individual block groups move between those typologies across three time periods exposes gentrification, decline, and stabilization patterns that boundary-based analysis tends to miss.`,
 
     architecture: `**Data acquisition:** The pipeline pulls ACS 5-year estimates for Cook County block groups (Illinois FIPS 17, Cook County FIPS 031) across three snapshot years, 2013, 2018, and 2023, plus tract-level poverty estimates pulled separately since poverty isn't available at the block-group level in the ACS.
 
@@ -364,22 +417,13 @@ I ran a small round of informal testing four to five people trying the headset c
 
 **Feature preparation and clustering:** Eight variables, Hispanic population share, share with a bachelor's degree or higher, median home value, median age, median household income, crime count, unemployment rate, and poverty rate, are z-score normalized, then used to build a full Euclidean distance matrix and a k=8 nearest-neighbor graph, symmetrized to remove duplicate edges. Louvain community detection runs independently on each year's graph. Block groups with missing data are dropped rather than imputed, which avoids inventing values at the cost of shifting which block groups are actually represented in a given year's clustering.
 
+![grid-3: Median household income by block group in 2013 and 2023, and the change between them, straight from the pipeline's map output](/screenshots/cookCountyIncome2013.webp,/screenshots/cookCountyIncome2023.webp,/screenshots/cookCountyIncomeChange.webp)
+
 **Aggregation and interpretation:** Block groups also feed a separate branch that aggregates them up to Community Areas and Municipalities using population-weighted averages, feeding the cluster-profile tables and the alluvial flow diagrams. In the current codebase, this aggregation step and the scripts that build those profiles and flow diagrams expect different intermediate file formats than what's actually produced, so the block-group-level clustering pipeline is the fully reproducible path; the Community-Area-level interpretation outputs are something I still need to confirm the generation path for before describing them as clean end-to-end automation.
 
-**Gap in current commit**
-* ACS + tract poverty pull
-* Shared 2020 block-group geometry
-* Crime join + rail distance
-* 8-variable feature matrix
-* Z-score normalize
-* Euclidean k=8 graph
-* Louvain community detection
-* Year-specific meta-cluster mapping
-* Choropleths, change maps, cluster maps
-* CA/Municipality aggregation
-* Cluster profiles + alluvial flow`,
+![The pipeline, run once per snapshot year. The dashed branch is the aggregation step that isn't wired up in the current commit](/screenshots/cookCountyPipeline.webp)`,
 
-    methodology: `![Alluvial diagram showing neighborhood typology transitions](/screenshots/cookCounty2.png)\n\nFor each snapshot year, I normalize the eight-variable feature set and build the KNN graph independently, then run Louvain on that year's graph in isolation. Louvain's community IDs aren't stable between separate runs, so the same underlying neighborhood type can come out as a different raw ID in 2013, 2018, and 2023. To make the results comparable across years, I built year-specific lookup tables mapping each year's raw cluster IDs onto seven consistent meta-cluster labels, letting the same neighborhood type be tracked as it evolves rather than relabeling itself every year.
+    methodology: `![Alluvial diagram showing neighborhood typology transitions](/screenshots/cookCounty2.webp)\n\nFor each snapshot year, I normalize the eight-variable feature set and build the KNN graph independently, then run Louvain on that year's graph in isolation. Louvain's community IDs aren't stable between separate runs, so the same underlying neighborhood type can come out as a different raw ID in 2013, 2018, and 2023. To make the results comparable across years, I built year-specific lookup tables mapping each year's raw cluster IDs onto seven consistent meta-cluster labels, letting the same neighborhood type be tracked as it evolves rather than relabeling itself every year.
 
 A few of the pipeline's design choices are trade-offs I made deliberately rather than the only option available: reusing a single 2020 geometry base instead of year-specific boundaries, using centroid-to-station distance instead of network routing, and dropping incomplete rows instead of imputing them. Each one trades some fidelity for a simpler, more defensible pipeline, worth naming as a real limitation rather than smoothing over.
 
@@ -447,7 +491,7 @@ There's no CI pipeline, automated test suite, or profiling data in the project, 
     ],
 
     impactsAndKeyTakeaways:
-      "![poster made for the project](/screenshots/cookCounty3.png)\n\nThe poster shown here summarizes the full analysis as presented, including the cluster maps across all three years side by side and the income, unemployment, and poverty distributions that fed into the clustering variables.\n\nThis was a two-person, self-directed project, not a deployed tool. There's no dashboard and no external users yet, and because Louvain clustering is unsupervised, there's no accuracy score to report the way there would be with a classification model. The value sits in the patterns the network-based approach surfaces, not in a single performance number. Building the pipeline end to end reinforced why similarity graphs are worth the extra effort over administrative boundaries: gentrification, decline, and stabilization all tend to happen gradually and across boundary lines, and a choropleth broken out by Community Area smooths right over that kind of change. The natural next step would be turning these static outputs into an interactive dashboard, so someone could actually explore the year-over-year transitions themselves instead of only seeing them as fixed flow diagrams.",
+      "![poster made for the project](/screenshots/cookCounty3.webp)\n\nThe poster shown here summarizes the full analysis as presented, including the cluster maps across all three years side by side and the income, unemployment, and poverty distributions that fed into the clustering variables.\n\nThis was a two-person, self-directed project, not a deployed tool. There's no dashboard and no external users yet, and because Louvain clustering is unsupervised, there's no accuracy score to report the way there would be with a classification model. The value sits in the patterns the network-based approach surfaces, not in a single performance number. Building the pipeline end to end reinforced why similarity graphs are worth the extra effort over administrative boundaries: gentrification, decline, and stabilization all tend to happen gradually and across boundary lines, and a choropleth broken out by Community Area smooths right over that kind of change. The natural next step would be turning these static outputs into an interactive dashboard, so someone could actually explore the year-over-year transitions themselves instead of only seeing them as fixed flow diagrams.",
 
     media: [
       "/projects/spatial-inequality/cluster-map-2013.png",
@@ -464,7 +508,7 @@ There's no CI pipeline, automated test suite, or profiling data in the project, 
     title: "IIT Campus Assistant",
     shortDescription:
       "A hybrid RAG-SQL campus chatbot for Illinois Institute of Technology that ingests live dining menus and campus events over Apache Kafka, stores structured data in SQLite, builds FAISS vector indexes for semantic search, and uses Llama-3 (via Groq) to route and answer natural-language questions.",
-    coverImage: "/campusAssistantCover.png",
+    coverImage: "/campusAssistantCover.webp",
     skills: [
       "Python",
       "Apache Kafka",
@@ -477,9 +521,9 @@ There's no CI pipeline, automated test suite, or profiling data in the project, 
     ],
     role: "Team effort - Built the real-time events pipeline (Kafka ingestion, SQLite persistence, FAISS indexing, and time-aware retrieval) and led integration across the team's three independently-built subsystems into one working app.",
 
-    problemStatement: "![Streamlit app in action](/screenshots/campusAssitant1.png)\n\nUniversity students and prospective applicants need quick answers spanning three separate domains: dining menus, campus events, and academic or admissions information. The underlying sources are scattered across a dining API, an ICS calendar feed, and dozens of catalog and admissions web pages. The Campus Assistant consolidates all three into one natural-language interface, and it leans on structured retrieval rather than open-ended generation specifically to cut down on hallucinated answers.",
+    problemStatement: "![Streamlit app in action](/screenshots/campusAssitant1.webp)\n\nUniversity students and prospective applicants need quick answers spanning three separate domains: dining menus, campus events, and academic or admissions information. The underlying sources are scattered across a dining API, an ICS calendar feed, and dozens of catalog and admissions web pages. The Campus Assistant consolidates all three into one natural-language interface, and it leans on structured retrieval rather than open-ended generation specifically to cut down on hallucinated answers.",
 
-    architecture: "Ingestion (my work): Data comes in event-driven through Apache Kafka, a system for streaming data between services in real time rather than on a fixed schedule. A producer I built scrapes the DineOnCampus REST API and IIT's ICS calendar feed, then publishes typed batches, tagged either menu_batch or events_batch, to a shared Kafka topic (a named channel that other services can listen to). A consumer I also built listens on that topic and handles each batch by type: menu items get written straight to SQLite, while events get written to SQLite and then trigger an automatic rebuild of the events search index, so semantic search never falls out of date. Kafka offsets are essentially a bookmark of what's already been processed, and I only commit that bookmark once both the SQLite write and the index rebuild succeed. That means a crash partway through a batch doesn't silently lose or duplicate data, the consumer just replays cleanly from the last successful point on restart.\n\nEvents search index (my work): FAISS is a library for fast similarity search over vector embeddings, numeric representations of text that let a computer compare meaning rather than just matching exact words. I built the pipeline that reads events out of SQLite, builds a composite string for each one (title, date, location, and description combined), encodes it with a sentence-embedding model, and stores the result in an IndexFlatIP index, a FAISS index type built for cosine similarity search, alongside a metadata file that maps each vector back to its original event.\n\nCurriculum pipeline (teammate's work): In parallel, a separate batch pipeline built by a teammate crawls university web pages, cleans and chunks the content, and builds its own FAISS index for academic and admissions material. That side of the system isn't something I built, but it's worth naming since it's the third domain the chatbot has to route between.\n\nQuery-time routing: A Streamlit chat interface, built by a teammate, sends each question to an LLM-based intent router (also a teammate's work) that classifies the question as dining, events, or curriculum and pulls out structured filters like date or dietary preference. Dining questions and date-only event questions run as direct SQL lookups. Curriculum questions go through the teammate-built FAISS search. Topic-based event questions are where my constrained retrieval logic comes in: SQL narrows the candidate set by date first, and only then does FAISS rank within that narrowed set for relevance.",
+    architecture: "![System architecture. Lime frames are my work, grey frames are my teammates'](/screenshots/campusArchitecture.webp)\n\nIngestion (my work): Data comes in event-driven through Apache Kafka, a system for streaming data between services in real time rather than on a fixed schedule. A producer I built scrapes the DineOnCampus REST API and IIT's ICS calendar feed, then publishes typed batches, tagged either menu_batch or events_batch, to a shared Kafka topic (a named channel that other services can listen to). A consumer I also built listens on that topic and handles each batch by type: menu items get written straight to SQLite, while events get written to SQLite and then trigger an automatic rebuild of the events search index, so semantic search never falls out of date. Kafka offsets are essentially a bookmark of what's already been processed, and I only commit that bookmark once both the SQLite write and the index rebuild succeed. That means a crash partway through a batch doesn't silently lose or duplicate data, the consumer just replays cleanly from the last successful point on restart.\n\nEvents search index (my work): FAISS is a library for fast similarity search over vector embeddings, numeric representations of text that let a computer compare meaning rather than just matching exact words. I built the pipeline that reads events out of SQLite, builds a composite string for each one (title, date, location, and description combined), encodes it with a sentence-embedding model, and stores the result in an IndexFlatIP index, a FAISS index type built for cosine similarity search, alongside a metadata file that maps each vector back to its original event.\n\nCurriculum pipeline (teammate's work): In parallel, a separate batch pipeline built by a teammate crawls university web pages, cleans and chunks the content, and builds its own FAISS index for academic and admissions material. That side of the system isn't something I built, but it's worth naming since it's the third domain the chatbot has to route between.\n\nQuery-time routing: A Streamlit chat interface, built by a teammate, sends each question to an LLM-based intent router (also a teammate's work) that classifies the question as dining, events, or curriculum and pulls out structured filters like date or dietary preference. Dining questions and date-only event questions run as direct SQL lookups. Curriculum questions go through the teammate-built FAISS search. Topic-based event questions are where my constrained retrieval logic comes in: SQL narrows the candidate set by date first, and only then does FAISS rank within that narrowed set for relevance.",
 
     methodology: "The core pattern I built for events is constrained retrieval rather than pure semantic search. A plain vector search over events can easily surface something that's a close topical match but happened months ago or hasn't happened yet, since embedding similarity has no built-in sense of time. My fix runs the SQL date filter first, narrowing the candidate set down to a list of valid event URLs within the relevant window, and only passes that narrowed list into FAISS. The vector search never even sees an event outside the requested timeframe, so it can't rank one highly by accident.\n\nOn the ingestion side, tying Kafka's offset commits to both the SQLite write and the FAISS rebuild succeeding was a deliberate fault-tolerance choice. If either step fails mid-batch, the consumer doesn't move its bookmark forward, so it picks the batch back up cleanly on restart instead of leaving the search index quietly out of sync with what's actually in the database.",
 
@@ -546,7 +590,7 @@ There's no CI pipeline, automated test suite, or profiling data in the project, 
       },
     ],
 
-    impactsAndKeyTakeaways: "![the assistant being asked a question about courses](/screenshots/campusAssistant2.png)\n\n![the assistant being asked a question about the dining options](/screenshots/campusAssistan3.png)\n\nThe most useful pattern to come out of this project was combining structured SQL filtering with vector search instead of treating them as alternatives to each other. Using SQL to establish what's temporally valid before FAISS ranks by relevance meaningfully cut down on the chatbot confidently citing an event that had already happened. Tying Kafka offset commits to downstream write success was a small design choice that made the ingestion pipeline resilient to partial failures without needing a separate error-handling system on top. The system runs on localhost, with the producer triggered manually rather than on a schedule, and there's no usage data or deployment beyond local testing. The value here was in designing and integrating a coherent multi-source retrieval architecture, not in production traffic.",
+    impactsAndKeyTakeaways: "![the assistant being asked a question about courses](/screenshots/campusAssistant2.webp)\n\n![the assistant being asked a question about the dining options](/screenshots/campusAssistan3.webp)\n\nThe most useful pattern to come out of this project was combining structured SQL filtering with vector search instead of treating them as alternatives to each other. Using SQL to establish what's temporally valid before FAISS ranks by relevance meaningfully cut down on the chatbot confidently citing an event that had already happened. Tying Kafka offset commits to downstream write success was a small design choice that made the ingestion pipeline resilient to partial failures without needing a separate error-handling system on top. The system runs on localhost, with the producer triggered manually rather than on a schedule, and there's no usage data or deployment beyond local testing. The value here was in designing and integrating a coherent multi-source retrieval architecture, not in production traffic.",
 
     media: [
       "/projects/campus-assistant/architecture-diagram.png",
@@ -562,7 +606,7 @@ There's no CI pipeline, automated test suite, or profiling data in the project, 
     title: "ConfidentialML",
     shortDescription:
       "A containerized federated learning system combining Paillier homomorphic encryption with Gaussian differential privacy, so multiple clients can jointly train a logistic regression model without the server or any other party ever seeing raw data or plaintext model updates.",
-    coverImage: "/confidentialMLCover.png",
+    coverImage: "/confidentialMLCover.webp",
     skills: [
       "Python",
       "Federated Learning",
@@ -576,27 +620,13 @@ There's no CI pipeline, automated test suite, or profiling data in the project, 
 
     problemStatement: "How can multiple parties train a machine learning model together when they can't share their private data with each other and can't fully trust the server coordinating the training? That's a real constraint in regulated or adversarial settings: a group of banks that can't pool customer data across institutions for fraud detection, or allied organizations that need a shared model without exposing classified inputs to one another. ConfidentialML is a technical demonstration of an architecture for that problem, not a deployed system for either use case.",
 
-    architecture: `![Architecture](/screenshots/confidentialML1.png)\n\nEach round starts with client registration. Once a minimum of three clients have joined, the server randomly elects one as Leader. The Leader generates a 2048-bit Paillier keypair, a public/private key pair sized for that level of homomorphic encryption strength, sends only the public key to the server, and distributes the private key directly to the other clients, peer-to-peer, so it never touches the server at all.
+    architecture: `![One round, from setup to the next round. Lime marks encrypted data and key material](/screenshots/confidentialMLRound.webp)\n\nEach round starts with client registration. Once a minimum of three clients have joined, the server randomly elects one as Leader. The Leader generates a 2048-bit Paillier keypair, a public/private key pair sized for that level of homomorphic encryption strength, sends only the public key to the server, and distributes the private key directly to the other clients, peer-to-peer, so it never touches the server at all.
 
 In each training round, selected clients decrypt the current global model, train a logistic regression locally for 10 epochs at a learning rate of 1.0, and compute the difference between their updated weights and the model they started with. Before that update leaves the client, it goes through two privacy steps: L2 norm clipping bounds how much any single update can shift the model, and Gaussian noise is added on top for differential privacy, before the whole thing is re-encrypted with the Paillier public key.
 
 The server's job is narrower than "averaging": it collects updates from at least three clients and computes their weighted sum while they're still encrypted, exploiting the fact that Paillier ciphertexts can be added together without ever being decrypted. It sends that encrypted sum back out. The actual division, the step that turns a sum into an average, happens only after a client decrypts it locally. That split exists because the server was never designed to hold a decryption key at all, and division isn't a natural fit for the encrypted arithmetic Paillier supports the way addition is.
 
-Privacy loss doesn't reset between rounds, so we track it cumulatively using Rényi differential privacy accounting, evaluated across 10 discrete privacy orders, against a configured total epsilon budget. If a client's running privacy cost would exceed that budget, it exits rather than continuing to train.
-
-* public key
-* private key, peer-to-peer
-* Clients register
-* Leader elected
-* Leader generates Paillier keypair
-* Server
-* Other clients
-* Selected clients: decrypt, train 10 epochs
-* L2 clip + Gaussian noise
-* Re-encrypt with public key
-* Server: weighted SUM on ciphertexts
-* Clients decrypt
-* Clients divide: sum becomes average`,
+Privacy loss doesn't reset between rounds, so we track it cumulatively using Rényi differential privacy accounting, evaluated across 10 discrete privacy orders, against a configured total epsilon budget. If a client's running privacy cost would exceed that budget, it exits rather than continuing to train.`,
 
     methodology: `Unlike some of the other projects, this one has real commit-level evidence of iteration rather than a single initial commit. The Rényi DP accounting and the epsilon budget threshold were introduced in a dedicated commit, separate from when the Paillier key size was set to 2048 bits, and a distinct cleanup and refactoring pass happened after both of those. The pytest suite and the CI workflow were also added as their own pass, after the core cryptographic and privacy logic was already in place, which suggests testing was layered on once the design had stabilized rather than being written test-first.
 
@@ -689,25 +719,25 @@ There's a pytest suite covering the cryptographic primitives and the DP formulas
       "/projects/confidential-ml/docker-compose-setup.png",
       "/projects/confidential-ml/ci-pipeline.png",
     ],
-    githubUrl: "https://https://github.com/CLEMS3/ConfidentialML.com/Somanyloopholes",
+    githubUrl: "https://github.com/CLEMS3/ConfidentialML",
   },
   {
     id: "ieee-iit-style-guide",
     title: "IEEE@IIT Style Guide",
     shortDescription:
       "A unified design system reconciling IEEE's and Illinois Tech's brand identities into one practical style guide, then used to produce the chapter's on-brand event materials.",
-    coverImage: "/IEEExIITcover.png",
+    coverImage: "/IEEExIITcover.webp",
     skills: [
       "Figma",
       "UI/UX"
     ],
     role: "Board Member, IEEE Student Chapter, Illinois Institute of Technology (Social Media & Community Engagement)",
 
-    problemStatement: "![Style guide - color and typography](/screenshots/IEEExIIT1.png)\n\nMy actual board role covered social media and community engagement, not design, but running the chapter's Instagram and building materials for events meant constantly deciding how to represent two separate brands at once: IEEE's global identity and Illinois Tech's institutional identity, with no shared reference for how the two should actually be combined. Every new post or poster meant re-deciding the same things from scratch: which blue, which logo lockup, which pairing was actually correct. I built the style guide to settle that once, on my own initiative, since nothing about my actual role required it.",
+    problemStatement: "![Style guide - color and typography](/screenshots/IEEExIIT1.webp)\n\nMy actual board role covered social media and community engagement, not design, but running the chapter's Instagram and building materials for events meant constantly deciding how to represent two separate brands at once: IEEE's global identity and Illinois Tech's institutional identity, with no shared reference for how the two should actually be combined. Every new post or poster meant re-deciding the same things from scratch: which blue, which logo lockup, which pairing was actually correct. I built the style guide to settle that once, on my own initiative, since nothing about my actual role required it.",
 
-    architecture: "The guide is built in four layers, each one building on the layer before it.\n\nColor: A primary palette plus a tint scale, meaning each core color also comes with a range of lighter and darker steps derived from it, so there's an approved way to use a lighter version of a brand color for something like a background or a hover state instead of someone picking an arbitrary shade by eye.\n\nType: A modular typographic scale, a type system where each size is calculated as a fixed ratio of the one before it rather than picked by feel, covering H1 through H5 plus body and small text. I documented the actual ratio and font sources directly in the guide, including links to the type specimen and the modular scale calculator I used, so anyone extending the system later isn't guessing at how the numbers were derived.\n\nLogo lockups: The core of the project. A lockup is a specific, pre-approved way of combining or positioning two logos together, and I built out a full matrix of them across light and dark backgrounds, individual marks, side-by-side combinations, and vertical stacks. Rather than leaving it to whoever's building a poster or Instagram post that week to decide how the two logos should sit next to each other, every valid combination already exists as a documented, ready-to-use asset. I applied that matrix directly to the chapter's actual Instagram presence, including profile picture variants and a recurring team-spotlight post template.\n\n![Style guide - some logo lockups](/screenshots/IEEExIIT2.png)",
+    architecture: "The guide is built in four layers, each one building on the layer before it.\n\nColor: A primary palette plus a tint scale, meaning each core color also comes with a range of lighter and darker steps derived from it, so there's an approved way to use a lighter version of a brand color for something like a background or a hover state instead of someone picking an arbitrary shade by eye.\n\nType: A modular typographic scale, a type system where each size is calculated as a fixed ratio of the one before it rather than picked by feel, covering H1 through H5 plus body and small text. I documented the actual ratio and font sources directly in the guide, including links to the type specimen and the modular scale calculator I used, so anyone extending the system later isn't guessing at how the numbers were derived.\n\nLogo lockups: The core of the project. A lockup is a specific, pre-approved way of combining or positioning two logos together, and I built out a full matrix of them across light and dark backgrounds, individual marks, side-by-side combinations, and vertical stacks. Rather than leaving it to whoever's building a poster or Instagram post that week to decide how the two logos should sit next to each other, every valid combination already exists as a documented, ready-to-use asset. I applied that matrix directly to the chapter's actual Instagram presence, including profile picture variants and a recurring team-spotlight post template.\n\n![Style guide - some logo lockups](/screenshots/IEEExIIT2.webp)",
 
-    methodology: "I started by auditing both IEEE's and Illinois Tech's existing brand guidelines directly, checking clear space rules, approved color values, and lockup restrictions rather than working from memory or a rough sense of each brand, since getting a detail wrong risked misrepresenting either organization. From there I extracted the primary colors and typography into one shared token set both brands could sit inside of.\n\nOnce the core tokens existed, I defined interactive states, meaning how a component actually looks in its default resting state, on hover, and when disabled, for every reusable component in the system, and built out every approved logo pairing as its own separately documented lockup rather than leaving the combination rules open to individual judgment. I also wrote the guide with the next person in mind, not just myself: font sourcing notes, links to the tools I used, and the reasoning behind decisions, not just the decisions themselves, so whoever inherits this role after me isn't rebuilding it from scratch. The guide then went straight into use on real deliverables, chapter event posters and the chapter's Instagram account, instead of sitting as a reference document nobody actually opened.",
+    methodology: "![The process, from auditing both guidelines to the guide in real use](/screenshots/ieeeProcess.webp)\n\nI started by auditing both IEEE's and Illinois Tech's existing brand guidelines directly, checking clear space rules, approved color values, and lockup restrictions rather than working from memory or a rough sense of each brand, since getting a detail wrong risked misrepresenting either organization. From there I extracted the primary colors and typography into one shared token set both brands could sit inside of.\n\n![Two brand guidelines merged into one shared token set](/screenshots/ieeeTokens.webp)\n\nOnce the core tokens existed, I defined interactive states, meaning how a component actually looks in its default resting state, on hover, and when disabled, for every reusable component in the system, and built out every approved logo pairing as its own separately documented lockup rather than leaving the combination rules open to individual judgment. I also wrote the guide with the next person in mind, not just myself: font sourcing notes, links to the tools I used, and the reasoning behind decisions, not just the decisions themselves, so whoever inherits this role after me isn't rebuilding it from scratch. The guide then went straight into use on real deliverables, chapter event posters and the chapter's Instagram account, instead of sitting as a reference document nobody actually opened.",
 
     challenges: [
       {
@@ -743,7 +773,7 @@ There's a pytest suite covering the cryptographic primitives and the DP formulas
 
 
     impactsAndKeyTakeaways:
-      "![one of the team announcement posters](/screenshots/IEEExIIT3.png)\n\nThe guide gave the chapter a single source of truth for brand-compliant materials, which removed the recurring back-and-forth over which blue or which logo pairing was actually safe to use. It went beyond posters into the chapter's actual Instagram presence, including profile picture variants and a repeatable team-spotlight template. Posters and posts produced from the spec stayed visually consistent even when made weeks apart by completely different people.\n\nThe team-spotlight poster shown here is a direct example of the guide in practice: the primary color pulled straight from the token set, the IEEE Illinois Tech lockup used exactly as documented, and the typographic hierarchy following the same H1-to-body scale defined in the guide, not a one-off design made from scratch.\n\nThe bigger lesson was that a style guide is only as good as its second use. The hard part was never making the document itself look good, it was making the decisions inside it concrete and documented enough that someone else, including whoever holds this role after me, could actually apply them under a deadline without re-litigating brand choices or official guideline details from scratch.",
+      "![one of the team announcement posters](/screenshots/IEEExIIT3.webp)\n\nThe guide gave the chapter a single source of truth for brand-compliant materials, which removed the recurring back-and-forth over which blue or which logo pairing was actually safe to use. It went beyond posters into the chapter's actual Instagram presence, including profile picture variants and a repeatable team-spotlight template. Posters and posts produced from the spec stayed visually consistent even when made weeks apart by completely different people.\n\nThe team-spotlight poster shown here is a direct example of the guide in practice: the primary color pulled straight from the token set, the IEEE Illinois Tech lockup used exactly as documented, and the typographic hierarchy following the same H1-to-body scale defined in the guide, not a one-off design made from scratch.\n\nThe bigger lesson was that a style guide is only as good as its second use. The hard part was never making the document itself look good, it was making the decisions inside it concrete and documented enough that someone else, including whoever holds this role after me, could actually apply them under a deadline without re-litigating brand choices or official guideline details from scratch.",
 
     media: [
       // Add screenshots of the style guide sections and the finished posters, e.g.:

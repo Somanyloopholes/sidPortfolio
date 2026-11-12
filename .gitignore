@@ -33,3 +33,5 @@ dist-ssr
 # AI/Agent configurations
 .agents/
 .gemini/
+/branding
+CLAUDE.md
